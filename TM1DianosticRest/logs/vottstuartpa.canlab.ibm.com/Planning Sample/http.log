@@ -1,0 +1,7 @@
+GET, HTTP 200, https://vottstuartpa.canlab.ibm.com:12354/api/v1/Configuration
+GET, HTTP 200, https://vottstuartpa.canlab.ibm.com:12354/api/v1/Contents('Applications')?$expand=tm1.Folder/Contents($expand=tm1.Folder/Contents($expand=tm1.Folder/Contents($expand=tm1.Folder/Contents($expand=tm1.Folder/Contents))))
+GET, HTTP 200, https://vottstuartpa.canlab.ibm.com:12354/api/v1/Cubes
+GET, HTTP 200, https://vottstuartpa.canlab.ibm.com:12354/api/v1/Dimensions
+GET, HTTP 200, https://vottstuartpa.canlab.ibm.com:12354/api/v1/Processes
+GET, HTTP 200, https://vottstuartpa.canlab.ibm.com:12354/api/v1/Chores?$select=Name,Active
+GET, HTTP 200, https://vottstuartpa.canlab.ibm.com:12354/api/v1/Contents('Blobs')/Contents

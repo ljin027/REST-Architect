@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/ext/commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/ext/httpclient-4.5.3.jar"/>
+	<classpathentry kind="lib" path="lib/ext/httpclient-win-4.5.3.jar"/>
+	<classpathentry kind="lib" path="lib/ext/httpcore-4.4.6.jar"/>
+	<classpathentry kind="lib" path="lib/ext/jasypt-1.9.2.jar"/>
+	<classpathentry kind="lib" path="lib/ext/org.eclipse.jface.jar"/>
+	<classpathentry kind="lib" path="lib/ext/swt-debug.jar"/>
+	<classpathentry kind="lib" path="lib/ext/swt.jar"/>
+	<classpathentry kind="lib" path="lib/ext/wink-json4j-1.4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/kings/workspace/TM1DianosticRest/lib/ext/jackson-core-2.9.3.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

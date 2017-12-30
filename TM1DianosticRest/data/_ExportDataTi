@@ -1,0 +1,161 @@
+{
+    "@odata.context": "$metadata#Processes/$entity",
+    "@odata.etag": "W/\"16058864\"",
+    "Name": "_exportCube",
+    "HasSecurityAccess": true,
+    "PrologProcedure": "\r\n#****Begin: Generated Statements***\r\n#****End: Generated Statements****\r\n\r\nsourceViewName = '_exportCube';\r\nViewCreate ( pCubeName, sourceViewName, 1 );\r\n\r\ni = 1;\r\ndimensionName = TABDIM ( pCubeName, i );\r\nWHILE ( dimensionName @<> '' );\r\n   i = i + 1;\r\n   dimensionName = TABDIM ( pCubeName, i );\r\nEND;\r\n\r\ndimensionCount = i - 1;\r\n\r\ni = 1;\r\nWHILE ( i <= dimensionCount );\r\n   currentDim = TABDIM ( pCubeName, i );\r\n   subsetName = 'diag.temp';\r\n   IF (SubsetExists ( currentDim, subsetName ) = 1 );\r\n      SubsetDestroy ( currentDim, subsetName ); \r\n   ENDIF;\r\n   SubsetCreate ( currentDim, subsetName, 1 );\r\n   j = 1;\r\n   WHILE ( j <= DIMSIZ (currentDim) );\r\n      currentElement = DIMNM ( currentDim, j );\r\n      IF ( ELLEV (currentDim, currentElement ) = 0);\r\n         SubsetElementInsert (  currentDim, subsetName, currentElement, SubsetGetSize ( currentDim, subsetName ) + 1 );\r\n      ENDIF;\r\n      j = j + 1;\r\n   END; \r\n   ViewSubsetAssign ( pCubeName, sourceViewName, currentDim, subsetName);\r\n   i = i + 1;\r\nEND;\r\n\r\nViewExtractSkipZeroesSet ( pCubeName, sourceViewName, 1);\r\nViewExtractSkipCalcsSet ( pCubeName, sourceViewName, 1);\r\nViewExtractSkipRuleValuesSet ( pCubeName, sourceViewName, 1);\r\n\r\n\r\nViewConstruct ( pCubeName, sourceViewName );\r\nDataSourceType='VIEW';\r\nDatasourceNameForServer=pCubeName;\r\nDatasourceCubeview=sourceViewName;",
+    "MetadataProcedure": "\r\n#****Begin: Generated Statements***\r\n#****End: Generated Statements****",
+    "DataProcedure": "\r\n#****Begin: Generated Statements***\r\n#****End: Generated Statements****\r\n\r\nIF ( dimensionCount = 2 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3 );\r\nELSEIF ( dimensionCount = 3 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4 );\r\nELSEIF ( dimensionCount = 4 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4,  v5 );\r\nELSEIF ( dimensionCount = 5 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6 );\r\nELSEIF ( dimensionCount = 6 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7 );\r\nELSEIF ( dimensionCount = 7 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8 );\r\nELSEIF ( dimensionCount = 8 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9 );\r\nELSEIF ( dimensionCount = 9 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10 );\r\nELSEIF ( dimensionCount = 10);\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11 );\r\nELSEIF ( dimensionCount = 11 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12 );\r\nELSEIF ( dimensionCount = 12 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13 );\r\nELSEIF ( dimensionCount = 13 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14 );\r\nELSEIF ( dimensionCount = 14);\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15 );\r\nELSEIF ( dimensionCount = 15 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16 );\r\nELSEIF ( dimensionCount = 16 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17 );\r\nELSEIF ( dimensionCount = 17 );\r\n   ASCIIOUTPUT ( pFileName, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18 );\r\nENDIF;\r\n",
+    "EpilogProcedure": "\r\n#****Begin: Generated Statements***\r\n#****End: Generated Statements****\r\n\r\n",
+    "DataSource": {
+        "Type": "TM1CubeView",
+        "dataSourceNameForClient": "diag.dummy.cube",
+        "dataSourceNameForServer": "diag.dummy.cube",
+        "view": "Default"
+    },
+    "Parameters": [
+        {
+            "Name": "pCubeName",
+            "Prompt": "",
+            "Value": "plan_BudgetPlan",
+            "Type": "String"
+        },
+        {
+            "Name": "pFileName",
+            "Prompt": "",
+            "Value": "123.blb",
+            "Type": "String"
+        }
+    ],
+    "Variables": [
+        {
+            "Name": "v1",
+            "Type": "String",
+            "Position": 1,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v2",
+            "Type": "String",
+            "Position": 2,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v3",
+            "Type": "String",
+            "Position": 3,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v4",
+            "Type": "String",
+            "Position": 4,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v5",
+            "Type": "String",
+            "Position": 5,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v6",
+            "Type": "String",
+            "Position": 6,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v7",
+            "Type": "String",
+            "Position": 7,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v8",
+            "Type": "String",
+            "Position": 8,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v9",
+            "Type": "String",
+            "Position": 9,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v10",
+            "Type": "String",
+            "Position": 10,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v11",
+            "Type": "String",
+            "Position": 11,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v12",
+            "Type": "String",
+            "Position": 12,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v13",
+            "Type": "String",
+            "Position": 13,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v14",
+            "Type": "String",
+            "Position": 14,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v15",
+            "Type": "String",
+            "Position": 15,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v16",
+            "Type": "String",
+            "Position": 16,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v17",
+            "Type": "String",
+            "Position": 17,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "v18",
+            "Type": "String",
+            "Position": 18,
+            "StartByte": 0,
+            "EndByte": 0
+        }
+    ],
+    "Attributes": {
+        "Caption": "_exportCube"
+    }
+}

@@ -1,0 +1,2 @@
+keystoreFile:.//config//truststore.jks
+keystorePass:123456
