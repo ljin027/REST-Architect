@@ -1,13 +1,20 @@
 package TM1Diagnostic.REST;
 
 public class TM1RestException extends Exception {
-	private int response;
+	private int errorCode;
+	private String errorMessage;
 	
-	TM1RestException(int response){
-		this.response = response;
+	
+	TM1RestException(int errorCode, String errorMessage){
+		this.errorCode = errorCode;
+		this.errorMessage = errorMessage;
 	}
 	
-	public int getResponse(){
-		return response;
+	public int getErrorCode(){
+		return errorCode;
+	}
+	
+	public String getErrorMessage() {
+		return errorMessage;
 	}
 }

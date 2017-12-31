@@ -246,7 +246,7 @@ public class TM1Dimension extends TM1Object {
 			tm1server.get(request);
 			return true;
 		} catch (TM1RestException ex){
-			if (((TM1RestException)ex).getResponse() == 404) {
+			if (((TM1RestException)ex).getErrorCode() == 404) {
 				return false;
 			}
 			throw ex;
@@ -271,7 +271,7 @@ public class TM1Dimension extends TM1Object {
 			tm1server.get(request);
 			return true;
 		} catch (TM1RestException ex){
-			if (((TM1RestException)ex).getResponse() == 404) {
+			if (((TM1RestException)ex).getErrorCode() == 404) {
 				return false;
 			}
 			throw ex;

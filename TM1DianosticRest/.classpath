@@ -11,6 +11,6 @@
 	<classpathentry kind="lib" path="lib/ext/swt-debug.jar"/>
 	<classpathentry kind="lib" path="lib/ext/swt.jar"/>
 	<classpathentry kind="lib" path="lib/ext/wink-json4j-1.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/kings/workspace/TM1DianosticRest/lib/ext/jackson-core-2.9.3.jar"/>
+	<classpathentry kind="lib" path="lib/ext/jackson-core-2.9.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

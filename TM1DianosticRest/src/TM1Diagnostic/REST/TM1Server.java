@@ -3,7 +3,7 @@ package TM1Diagnostic.REST;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,11 +11,12 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,22 +42,15 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
-//import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.routing.HttpRoute;
-import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
-//import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.conn.util.PublicSuffixMatcher;
-import org.apache.http.conn.util.PublicSuffixMatcherLoader;
 import org.apache.http.cookie.ClientCookie;
 import org.apache.http.cookie.Cookie;
-import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -64,8 +58,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
-//import org.apache.http.impl.cookie.DefaultCookieSpecProvider;
-//import org.apache.http.impl.cookie.RFC6265CookieSpecProvider;
 import org.apache.http.util.EntityUtils;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.OrderedJSONObject;
@@ -75,7 +67,6 @@ import org.eclipse.swt.widgets.Display;
 
 import TM1Diagnostic.Credential;
 import TM1Diagnostic.SearchResult;
-import TM1Diagnostic.UI.Wrarchitect;
 
 public class TM1Server {
 
@@ -151,8 +142,11 @@ public class TM1Server {
 
 	private StyledText httpTraceDisplay;
 
+	/*
+	 * Contructor for TM1 Local
+	 */
+
 	public TM1Server(String adminhost, String servername, int port, boolean usessl) throws Exception {
-		// try {
 		this.name = servername;
 		inetAddress = InetAddress.getByName(adminhost);
 		this.adminhost = inetAddress.getCanonicalHostName();
@@ -169,27 +163,23 @@ public class TM1Server {
 		}
 		logDirectory = new File(".//logs//" + this.adminhost + "//" + this.name);
 		logFile = new File(".//logs//" + this.adminhost + "//" + this.name + "//http.log");
-		if (!logDirectory.exists()) {
+		if (!logDirectory.exists())
 			logDirectory.mkdirs();
-		}
 		if (!logFile.exists())
 			logFile.createNewFile();
 		logFileWriter = new FileWriter(logFile.getAbsoluteFile(), true);
 		logBufferedWriter = new BufferedWriter(logFileWriter);
 		logPrintWriter = new PrintWriter(logBufferedWriter);
 		readConfigurationFromFile();
-		KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-		java.io.FileInputStream fis = null;
-		fis = new java.io.FileInputStream(keystoreFile);
-		ks.load(fis, keystorePass.toCharArray());
-		if (fis != null) {
-			fis.close();
-		}
-		SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(ks).build();
-		sslsf = new SSLConnectionSocketFactory(sslContext, new String[] { "TLSv1.2" }, null,
-				new NoopHostnameVerifier());
-		Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
-				.register("http", new PlainConnectionSocketFactory()).register("https", sslsf).build();
+		KeyStore keyStore = KeyStore.getInstance("JKS");
+		File keystoreF = new File(keystoreFile);
+		System.out.println("Keystore file: " + keystoreF.getAbsolutePath());
+		FileInputStream instream = new FileInputStream(keystoreFile);
+		keyStore.load(instream, keystorePass.toCharArray());
+		instream.close();
+		SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(keyStore).build();
+		sslsf = new SSLConnectionSocketFactory(sslContext, new String[] { "TLSv1.2" }, null, new NoopHostnameVerifier());
+		Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create().register("http", new PlainConnectionSocketFactory()).register("https", sslsf).build();
 		connectionManager = new PoolingHttpClientConnectionManager(registry);
 		connectionManager.setMaxTotal(200);
 		connectionManager.setDefaultMaxPerRoute(20);
@@ -222,29 +212,21 @@ public class TM1Server {
 		logFile = new File(".//logs//" + this.adminhost + "//" + this.name + "//http.log");
 		if (!logDirectory.exists())
 			logDirectory.mkdirs();
-
 		if (!logFile.exists())
 			logFile.createNewFile();
-
 		logFileWriter = new FileWriter(logFile.getAbsoluteFile(), true);
 		logBufferedWriter = new BufferedWriter(logFileWriter);
 		logPrintWriter = new PrintWriter(logBufferedWriter);
-
 		readConfigurationFromFile();
-		KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-		java.io.FileInputStream fis = null;
-		fis = new java.io.FileInputStream(keystoreFile);
-		ks.load(fis, keystorePass.toCharArray());
-		if (fis != null) {
-			fis.close();
-		}
-		SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(ks).build();
-		sslsf = new SSLConnectionSocketFactory(sslContext, new String[] { "TLSv1.2" }, null,
-				new NoopHostnameVerifier());
-
-		Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
-				.register("http", new PlainConnectionSocketFactory()).register("https", sslsf).build();
-
+		KeyStore keyStore = KeyStore.getInstance("JKS");
+		File keystoreF = new File(keystoreFile);
+		System.out.println("Keystore file: " + keystoreF.getAbsolutePath());
+		FileInputStream instream = new FileInputStream(keystoreFile);
+		keyStore.load(instream, keystorePass.toCharArray());
+		instream.close();
+		SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(keyStore).build();
+		sslsf = new SSLConnectionSocketFactory(sslContext, new String[] { "TLSv1.2" }, null, new NoopHostnameVerifier());
+		Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create().register("http", new PlainConnectionSocketFactory()).register("https", sslsf).build();
 		connectionManager = new PoolingHttpClientConnectionManager(registry);
 		connectionManager.setMaxTotal(200);
 		connectionManager.setDefaultMaxPerRoute(20);
@@ -277,16 +259,12 @@ public class TM1Server {
 			cookie.setAttribute(ClientCookie.DOMAIN_ATTR, "true");
 			cookieStore.addCookie(cookie);
 			CloseableHttpClient httpClient = null;
-			RequestConfig globalConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY)
-					.build();
+			RequestConfig globalConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
 			if (protocol.equals("http")) {
-				httpClient = HttpClients.custom().setConnectionManager(connectionManager)
-						.setDefaultRequestConfig(globalConfig).setDefaultCookieStore(cookieStore).build();
+				httpClient = HttpClients.custom().setConnectionManager(connectionManager).setDefaultRequestConfig(globalConfig).setDefaultCookieStore(cookieStore).build();
 				return httpClient;
 			} else if (protocol.equals("https")) {
-				httpClient = HttpClients.custom().setSSLSocketFactory(sslsf).setConnectionManager(connectionManager)
-						.setDefaultRequestConfig(globalConfig).setDefaultCookieStore(cookieStore)
-						.setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER).build();
+				httpClient = HttpClients.custom().setSSLSocketFactory(sslsf).setConnectionManager(connectionManager).setDefaultRequestConfig(globalConfig).setDefaultCookieStore(cookieStore).setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER).build();
 				return httpClient;
 			} else {
 				return null;
@@ -301,8 +279,7 @@ public class TM1Server {
 	public void get(String request) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
 		errorMessage = null;
-		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request)
-				.build();
+		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request).build();
 		HttpGet getrequest = new HttpGet(uri);
 		CloseableHttpClient httpClient = gethttpclient();
 		HttpResponse httpresponse = httpClient.execute(getrequest);
@@ -322,26 +299,24 @@ public class TM1Server {
 			return;
 		} else if (responseStatus == 401) {
 			authenticated = false;
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else if (responseStatus == 404) {
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else {
 			HttpEntity entity = httpresponse.getEntity();
 			if (entity != null) {
 				response = EntityUtils.toString(entity);
 				processErrorResponse(response);
 			}
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		}
 	}
 
 	// HTTP GET
-	public void get(String request, String query)
-			throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
+	public void get(String request, String query) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
 		errorMessage = null;
-		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request)
-				.setCustomQuery(query).build();
+		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request).setCustomQuery(query).build();
 		HttpGet getrequest = new HttpGet(uri);
 		CloseableHttpClient httpClient = gethttpclient();
 		HttpResponse httpresponse = httpClient.execute(getrequest);
@@ -361,26 +336,24 @@ public class TM1Server {
 			return;
 		} else if (responseStatus == 401) {
 			authenticated = false;
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else if (responseStatus == 404) {
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else {
 			HttpEntity entity = httpresponse.getEntity();
 			if (entity != null) {
 				response = EntityUtils.toString(entity);
 				processErrorResponse(response);
 			}
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		}
 	}
 
 	// HTTP POST
-	public void post(String request, OrderedJSONObject payload)
-			throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
+	public void post(String request, OrderedJSONObject payload) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
 		errorMessage = null;
-		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request)
-				.build();
+		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request).build();
 		HttpPost postrequest = new HttpPost(uri);
 		StringEntity input = new StringEntity(payload.toString());
 		input.setContentType("application/json");
@@ -406,21 +379,19 @@ public class TM1Server {
 			return;
 		} else if (responseStatus == 401) {
 			authenticated = false;
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else {
 			HttpEntity entity = httpresponse.getEntity();
 			if (entity != null)
 				processErrorResponse(EntityUtils.toString(entity));
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		}
 	}
 
-	public void threadSafePost(String request, final OrderedJSONObject payload)
-			throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
+	public void threadSafePost(String request, final OrderedJSONObject payload) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
 		errorMessage = null;
-		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request)
-				.build();
+		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request).build();
 		HttpPost postrequest = new HttpPost(uri);
 		StringEntity input = new StringEntity(payload.toString());
 		input.setContentType("application/json");
@@ -450,23 +421,21 @@ public class TM1Server {
 			return;
 		} else if (responseStatus == 401) {
 			authenticated = false;
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else {
 			HttpEntity entity = httpresponse.getEntity();
 			if (entity != null) {
 				processErrorResponse(EntityUtils.toString(entity));
 			}
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		}
 	}
 
 	// HTTP POST
-	public void post(String request, String query, OrderedJSONObject payload)
-			throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
+	public void post(String request, String query, OrderedJSONObject payload) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
 		errorMessage = null;
-		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request)
-				.setCustomQuery(query).build();
+		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request).setCustomQuery(query).build();
 		HttpPost postrequest = new HttpPost(uri);
 		StringEntity input = new StringEntity(payload.toString());
 		input.setContentType("application/json");
@@ -490,22 +459,20 @@ public class TM1Server {
 			return;
 		} else if (responseStatus == 401) {
 			authenticated = false;
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else {
 			HttpEntity entity = httpresponse.getEntity();
 			if (entity != null)
 				processErrorResponse(EntityUtils.toString(entity));
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		}
 	}
 
 	// HTTP PATCH
-	public void patch(String request, OrderedJSONObject payload)
-			throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
+	public void patch(String request, OrderedJSONObject payload) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
 		errorMessage = null;
-		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request)
-				.build();
+		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request).build();
 		HttpPatch patchrequest = new HttpPatch(uri);
 		StringEntity input = new StringEntity(payload.toString());
 		input.setContentType("application/json");
@@ -528,22 +495,20 @@ public class TM1Server {
 			return;
 		} else if (responseStatus == 401) {
 			authenticated = false;
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else {
 			HttpEntity entity = httpresponse.getEntity();
 			if (entity != null)
 				processErrorResponse(EntityUtils.toString(entity));
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		}
 	}
 
 	// HTTP PATCH
-	public void patch(String request, JSONArray payload)
-			throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
+	public void patch(String request, JSONArray payload) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
 		errorMessage = null;
-		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request)
-				.build();
+		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request).build();
 		HttpPatch patchrequest = new HttpPatch(uri);
 		StringEntity input = new StringEntity(payload.toString());
 		input.setContentType("application/json");
@@ -566,22 +531,20 @@ public class TM1Server {
 			return;
 		} else if (responseStatus == 401) {
 			authenticated = false;
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else {
 			HttpEntity entity = httpresponse.getEntity();
 			if (entity != null)
 				processErrorResponse(EntityUtils.toString(entity));
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		}
 	}
 
 	// HTTP PATCH
-	public void patch(String request, String payload)
-			throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
+	public void patch(String request, String payload) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
 		errorMessage = null;
-		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request)
-				.build();
+		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request).build();
 		HttpPatch patchrequest = new HttpPatch(uri);
 		StringEntity input = new StringEntity(payload);
 		input.setContentType("application/json");
@@ -604,21 +567,19 @@ public class TM1Server {
 			return;
 		} else if (responseStatus == 401) {
 			authenticated = false;
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else {
 			HttpEntity entity = httpresponse.getEntity();
 			if (entity != null)
 				processErrorResponse(EntityUtils.toString(entity));
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		}
 	}
 
-	public void delete(String request)
-			throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
+	public void delete(String request) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
 		errorMessage = null;
-		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request)
-				.build();
+		URI uri = new URIBuilder().setScheme(protocol).setHost(adminhost).setPort(port).setPath(restURI + request).build();
 		HttpDelete deleterequest = new HttpDelete(uri);
 		CloseableHttpClient httpClient = gethttpclient();
 		HttpResponse httpresponse = httpClient.execute(deleterequest);
@@ -638,12 +599,12 @@ public class TM1Server {
 			return;
 		} else if (responseStatus == 401) {
 			authenticated = false;
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		} else {
 			HttpEntity entity = httpresponse.getEntity();
 			if (entity != null)
 				processErrorResponse(EntityUtils.toString(entity));
-			throw new TM1RestException(responseStatus);
+			throw new TM1RestException(responseStatus, "");
 		}
 	}
 
@@ -760,7 +721,6 @@ public class TM1Server {
 	}
 
 	public boolean closeAllSession() {
-		// 123
 		return true;
 	}
 
@@ -793,8 +753,7 @@ public class TM1Server {
 		return sandboxes.get(i);
 	}
 
-	public boolean readSandboxesFromServer()
-			throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+	public boolean readSandboxesFromServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		sandboxes.clear();
 		get("Sandboxes");
 		OrderedJSONObject jresponse = new OrderedJSONObject(response);
@@ -810,16 +769,19 @@ public class TM1Server {
 
 	}
 
-	public boolean readCubesFromServer()
-			throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
+	/*
+	 * Function: readCubesFromServer
+	 * 
+	 * Reads the list of cubes from the TM1 Server. This includes control cubes.
+	 * Adds/removes cubes from the clients list of cubes.
+	 */
+	public void readCubesFromServer() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
 		get("Cubes");
-
 		OrderedJSONObject jresponse = new OrderedJSONObject(response);
 		JSONArray jcubes = jresponse.getJSONArray("value");
 		for (int i = 0; i < jcubes.length(); i++) {
 			OrderedJSONObject cubeJSON = (OrderedJSONObject) jcubes.getJSONObject(i);
 			TM1Cube cube = new TM1Cube(cubeJSON.getString("Name"), this);
-
 			boolean cubeAdded = false;
 			if (!cubes.contains(cube)) {
 				for (int j = 0; j < cubes.size(); j++) {
@@ -840,7 +802,6 @@ public class TM1Server {
 				cubes.remove(i);
 			}
 		}
-		return true;
 	}
 
 	public int getFoldersCount() {
@@ -851,8 +812,7 @@ public class TM1Server {
 		return folders.get(i);
 	}
 
-	public boolean readFoldersFromServer()
-			throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+	public boolean readFoldersFromServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		folders.clear();
 		String request = "Contents('Applications')";
 		String query = "$expand=tm1.Folder/Contents($expand=tm1.Folder/Contents($expand=tm1.Folder/Contents($expand=tm1.Folder/Contents($expand=tm1.Folder/Contents))))";
@@ -908,8 +868,7 @@ public class TM1Server {
 		return blobs.get(i);
 	}
 
-	public boolean readBlobsFromServer()
-			throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
+	public boolean readBlobsFromServer() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
 		blobs.clear();
 		String req = "Contents('Blobs')/Contents";
 		get(req);
@@ -949,8 +908,7 @@ public class TM1Server {
 		return cubes.get(i);
 	}
 
-	public boolean readDimensionsFromServer()
-			throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
+	public void readDimensionsFromServer() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
 		String req = "Dimensions";
 		get(req);
 		OrderedJSONObject jresponse = new OrderedJSONObject(response);
@@ -980,7 +938,6 @@ public class TM1Server {
 				dimensions.remove(i);
 			}
 		}
-		return true;
 	}
 
 	public int dimensionCount() {
@@ -991,8 +948,7 @@ public class TM1Server {
 		return dimensions.get(i);
 	}
 
-	public boolean readProcessesFromServer()
-			throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
+	public void readProcessesFromServer() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
 		processes.clear();
 		String req = "Processes";
 		get(req);
@@ -1021,8 +977,6 @@ public class TM1Server {
 				processes.remove(i);
 			}
 		}
-		return true;
-
 	}
 
 	public int processCount() {
@@ -1033,8 +987,7 @@ public class TM1Server {
 		return processes.get(i);
 	}
 
-	public boolean readChoresFromServer()
-			throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+	public void readChoresFromServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		chores.clear();
 		String request = "Chores";
 		String query = "$select=Name,Active";
@@ -1066,7 +1019,6 @@ public class TM1Server {
 				chores.remove(i);
 			}
 		}
-		return true;
 	}
 
 	public int choreCount() {
@@ -1077,10 +1029,13 @@ public class TM1Server {
 		return chores.get(i);
 	}
 
-	public boolean readSecurityMode() throws URISyntaxException, ClientProtocolException, IOException {
-		URI uri = new URIBuilder().setScheme(protocol).setHost(getAdminHostName() + ":" + port)
-				.setPath(restURI + "Configuration").build();
-		// System.out.println("readSecurityMode " + uri.toString());
+	/*
+	 * Function: readSecurityMode
+	 * 
+	 * Used to determine the security mode of the TM1 Server
+	 */
+	public void readSecurityMode() throws URISyntaxException, ClientProtocolException, IOException {
+		URI uri = new URIBuilder().setScheme(protocol).setHost(getAdminHostName() + ":" + port).setPath(restURI + "Configuration").build();
 		CloseableHttpClient httpclient = gethttpclient();
 		HttpClientContext context = HttpClientContext.create();
 		HttpGet httpget = new HttpGet(uri);
@@ -1093,16 +1048,11 @@ public class TM1Server {
 				if (header.getName().equals("WWW-Authenticate")) {
 					if (header.getValue().startsWith("CAMPassport")) {
 						securitymode = "CAM";
-						return true;
 					} else if (header.getValue().startsWith("Basic")) {
 						securitymode = "BASIC";
-						return true;
 					}
 				}
 			}
-			return false;
-		} else {
-			return false;
 		}
 	}
 
@@ -1112,66 +1062,69 @@ public class TM1Server {
 		return encoded;
 	}
 
-	public boolean authenticate(Credential c) throws URISyntaxException, KeyManagementException,
-			NoSuchAlgorithmException, ClientProtocolException, IOException, TM1RestException {
-		String authHeader;
-		if (securitymode.equals("CAM")) {
-			String encoding = base64Encode(c.getusername() + ":" + c.getpassword() + ":" + c.getnamespace());
-			connecteduser = c.getnamespace() + "\\" + c.getusername();
-			authHeader = "CAMNamespace " + new String(encoding);
-			System.out.println("Auth header: " + authHeader);
-		} else if (securitymode.equals("BASIC")) {
-			String encoding = base64Encode(c.getusername() + ":" + c.getpassword());
-			System.out.println("base64Encode " + encoding);
-			connecteduser = c.getusername();
-			authHeader = "Basic " + new String(encoding);
-			System.out.println("Auth header: " + authHeader);
-		} else {
-			return false;
-		}
-
-		URI uri = new URIBuilder().setScheme(protocol).setHost(getAdminHostName()).setPort(port)
-				.setPath(restURI + "Configuration").build();
-		HttpClient httpclient = null;
-		HttpClientContext context = HttpClientContext.create();
-		CookieStore cookieStore = new BasicCookieStore();
-		HttpClientBuilder builder = HttpClientBuilder.create().setDefaultCookieStore(cookieStore);
-
-		if (protocol.equals("https")) {
-			SSLContext sslContext = SSLContexts.custom().build();
-			sslsf = new SSLConnectionSocketFactory(sslContext, new String[] { "TLSv1.2" }, null,
-					new NoopHostnameVerifier());
-			Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
-					.register("http", new PlainConnectionSocketFactory()).register("https", sslsf).build();
-			httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultCookieStore(cookieStore).build();
-		} else {
-			httpclient = builder.build();
-		}
-
-		System.out.println("Authenticate URI: " + uri.toString());
-		HttpGet httpget = new HttpGet(uri);
-		System.out.println("1");
-		httpget.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
-		System.out.println("2");
-		HttpResponse response = httpclient.execute(httpget, context);
-		int responseStatus = response.getStatusLine().getStatusCode();
-		System.out.println("3");
-		System.out.println("AUTH " + responseStatus);
-		if (responseStatus >= 200 && responseStatus < 300) {
-			List<Cookie> cookies = cookieStore.getCookies();
-			for (int i = 0; i < cookies.size(); i++) {
-				Cookie cookie = cookies.get(i);
-				if (cookie.getName().equals("TM1SessionId")) {
-					System.out.println("TM1SessionID is now " + cookie.getValue());
-					TM1SessionId = cookie.getValue();
-					authenticated = true;
-					return true;
-				}
+	public void authenticate(Credential c) throws URISyntaxException, KeyManagementException, NoSuchAlgorithmException, ClientProtocolException, IOException, TM1RestException, KeyStoreException, CertificateException {
+		try {
+			String authHeader;
+			if (securitymode.equals("CAM")) {
+				String encoding = base64Encode(c.getusername() + ":" + c.getpassword() + ":" + c.getnamespace());
+				connecteduser = c.getnamespace() + "\\" + c.getusername();
+				authHeader = "CAMNamespace " + new String(encoding);
+				System.out.println("Auth header: " + authHeader);
+			} else if (securitymode.equals("BASIC")) {
+				String encoding = base64Encode(c.getusername() + ":" + c.getpassword());
+				System.out.println("base64Encode " + encoding);
+				connecteduser = c.getusername();
+				authHeader = "Basic " + new String(encoding);
+				System.out.println("Auth header: " + authHeader);
+			} else {
+				TM1RestException ex = new TM1RestException(1, "Failed to read server security mode");
+				throw ex;
 			}
-			return false;
-		} else {
-			TM1RestException exception = new TM1RestException(responseStatus);
-			throw exception;
+
+			URI uri = new URIBuilder().setScheme(protocol).setHost(getAdminHostName()).setPort(port).setPath(restURI + "Configuration").build();
+			
+			HttpClient httpclient = null;
+			HttpClientContext context = HttpClientContext.create();
+			CookieStore cookieStore = new BasicCookieStore();
+			HttpClientBuilder builder = HttpClientBuilder.create().setDefaultCookieStore(cookieStore);
+
+			if (protocol.equals("https")) {
+				KeyStore keyStore = KeyStore.getInstance("JKS");
+				File keystoreF = new File(keystoreFile);
+				System.out.println("Keystore file: " + keystoreF.getAbsolutePath());
+				FileInputStream instream = new FileInputStream(keystoreFile);
+				keyStore.load(instream, keystorePass.toCharArray());
+				instream.close();
+				SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(keyStore).build();
+				sslsf = new SSLConnectionSocketFactory(sslContext, new String[] { "TLSv1.2" }, null, new NoopHostnameVerifier());
+				Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create().register("http", new PlainConnectionSocketFactory()).register("https", sslsf).build();
+				httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultCookieStore(cookieStore).build();
+			} else {
+				httpclient = builder.build();
+			} 
+
+			// System.out.println("Authenticate URI: " + uri.toString());
+			HttpGet httpget = new HttpGet(uri);
+			httpget.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
+			HttpResponse response = httpclient.execute(httpget, context);
+			int responseStatus = response.getStatusLine().getStatusCode();
+			//System.out.println("AUTH " + responseStatus);
+			if (responseStatus >= 200 && responseStatus < 300) {
+				List<Cookie> cookies = cookieStore.getCookies();
+				for (int i = 0; i < cookies.size(); i++) {
+					Cookie cookie = cookies.get(i);
+					if (cookie.getName().equals("TM1SessionId")) {
+						// System.out.println("TM1SessionID is now " + cookie.getValue());
+						TM1SessionId = cookie.getValue();
+						authenticated = true;
+					}
+				}
+			} else {
+				TM1RestException ex = new TM1RestException(1, "Server responded with " + responseStatus + " during authentication");
+				throw ex;
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
 
@@ -1181,8 +1134,7 @@ public class TM1Server {
 		return false;
 	}
 
-	public boolean unauthenticate()
-			throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
+	public boolean unauthenticate() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
 		String request = "ActiveSession";
 		get(request);
 		OrderedJSONObject jresponse = new OrderedJSONObject(response);
@@ -1193,15 +1145,13 @@ public class TM1Server {
 		return true;
 	}
 
-	public void exportallprocesses(String directory)
-			throws ClientProtocolException, TM1RestException, URISyntaxException, IOException {
+	public void exportallprocesses(String directory) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException {
 		for (int i = 0; i < processes.size(); i++) {
 			processes.get(i).writeToFile(directory);
 		}
 	}
 
-	public boolean checkServerForObject(TM1Object tm1object)
-			throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
+	public boolean checkServerForObject(TM1Object tm1object) throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
 		String request = tm1object.entity;
 		get(request);
 		return true;
@@ -1216,8 +1166,7 @@ public class TM1Server {
 	 * rename the object prior to import into this model
 	 */
 
-	public void importObjectFromFile(TM1Object tm1object, String newname)
-			throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+	public void importObjectFromFile(TM1Object tm1object, String newname) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		String entityset = "";
 		OrderedJSONObject payload = new OrderedJSONObject();
 		if (tm1object.json.has("@odata.context")) {
@@ -1244,23 +1193,20 @@ public class TM1Server {
 		}
 	}
 
-	public void import_object(TM1Object tm1object, String name)
-			throws JSONException, ClientProtocolException, TM1RestException, URISyntaxException, IOException {
+	public void import_object(TM1Object tm1object, String name) throws JSONException, ClientProtocolException, TM1RestException, URISyntaxException, IOException {
 		String req = tm1object.entitySet;
 		OrderedJSONObject payload = tm1object.json;
 		payload.put("Name", name);
 		post(req, payload);
 	}
 
-	public void import_dimension(TM1Dimension dimension, String name)
-			throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+	public void import_dimension(TM1Dimension dimension, String name) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		String req = dimension.entitySet;
 		OrderedJSONObject payload = dimension.build_object_json(name);
 		post(req, payload);
 	}
 
-	public void import_cube(TM1Cube cube, String name)
-			throws ClientProtocolException, TM1RestException, URISyntaxException, IOException {
+	public void import_cube(TM1Cube cube, String name) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException {
 		String req = cube.entitySet;
 		OrderedJSONObject payload = cube.getJsonForTransfer(name);
 		post(req, payload);
@@ -1270,8 +1216,7 @@ public class TM1Server {
 		return TM1SessionId;
 	}
 
-	public String readVersionFromServer()
-			throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+	public String readVersionFromServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		String request = "Configuration";
 		get(request);
 		OrderedJSONObject configJSON = new OrderedJSONObject(response);
@@ -1279,10 +1224,15 @@ public class TM1Server {
 
 	}
 
-	public List<SearchResult> search(String searchTerm, boolean includeControlObjects, boolean regex)
-			throws TM1RestException, ClientProtocolException, JSONException, URISyntaxException, IOException {
+	/*
+	 * Function: search
+	 * 
+	 * Used to search all objects in the model by name. Rereads all cubes,
+	 * dimension, processes, etc from the server. Performs search only on objects
+	 * known by the client.
+	 */
+	public List<SearchResult> search(String searchTerm, boolean includeControlObjects, boolean regex) throws TM1RestException, ClientProtocolException, JSONException, URISyntaxException, IOException {
 		List<SearchResult> results = new ArrayList<SearchResult>();
-
 		for (int i = 0; i < cubes.size(); i++) {
 			TM1Cube cube = cubes.get(i);
 			if (!includeControlObjects && cube.displayName.startsWith("}"))
@@ -1323,8 +1273,7 @@ public class TM1Server {
 					if (!includeControlObjects && subset.displayName.startsWith("}"))
 						continue;
 					if (subset.displayName.contains(searchTerm)) {
-						results.add(new SearchResult(subset,
-								"Dimension " + dimension.displayName + " Hierarchy " + hierarchy.displayName));
+						results.add(new SearchResult(subset, "Dimension " + dimension.displayName + " Hierarchy " + hierarchy.displayName));
 					}
 				}
 
@@ -1352,17 +1301,22 @@ public class TM1Server {
 		return results;
 	}
 
+	/*
+	 * Function: keepAlive
+	 * 
+	 * Simple request used to keep the connection to the server alive
+	 */
 	public void keepAlive() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException {
 		String req = "ActiveUser";
 		get(req);
 	}
 
-	public void setContext() {
-		// String req = dimension.entitySet;
-		// OrderedJSONObject payload = dimension.build_object_json(name);
-		// post(req, payload);
-	}
-
+	/*
+	 * Function: readConfigurationFromFile
+	 * 
+	 * Reads the clients config file Currently only used for the keystore file and
+	 * keystore password
+	 */
 	public void readConfigurationFromFile() throws IOException {
 		System.out.println("Reading config file...");
 		String configFileName = ".//config//config";

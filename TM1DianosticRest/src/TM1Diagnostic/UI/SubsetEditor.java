@@ -296,7 +296,7 @@ public class SubsetEditor {
 
 		} catch (TM1RestException | URISyntaxException | IOException | JSONException e2) {
 			// TODO Auto-generated catch block
-			if (e2 instanceof TM1RestException && ((TM1RestException)e2).getResponse() == 401){
+			if (e2 instanceof TM1RestException && ((TM1RestException)e2).getErrorCode() == 401){
 				throw e2;
 			} else {
 				e2.printStackTrace();

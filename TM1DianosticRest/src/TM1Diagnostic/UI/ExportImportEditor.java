@@ -115,7 +115,7 @@ public class ExportImportEditor extends Dialog {
 	private List<TM1Object> transferObjects;
 
 	private FileTransferHelper fileTransferHelper;
-	
+
 	private TransferSpec transferSpec;
 
 	static private Image FOLDERICON;
@@ -710,7 +710,7 @@ public class ExportImportEditor extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				runTransfer();
-				
+
 			}
 		});
 		GridData gd_transferButton = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
@@ -870,31 +870,29 @@ public class ExportImportEditor extends Dialog {
 	public void updateDimensionListNode(TreeItem dimsnode) {
 		try {
 			dimsnode.removeAll();
-			if (tm1server.readDimensionsFromServer()) {
-				int count = tm1server.dimensionCount();
-				for (int i = 0; i < count; i++) {
-					TM1Dimension dimension = tm1server.getDimension(i);
-					String dimensionname = dimension.displayName;
-					if (!showControlObjects && dimensionname.startsWith("}")) {
-					} else {
-						TreeItem dimensionnode = new TreeItem(dimsnode, SWT.NONE);
-						dimensionnode.setImage(DIMICON);
-						dimensionnode.setData(dimension);
-						dimensionnode.setText(dimensionname);
+			tm1server.readDimensionsFromServer();
+			int count = tm1server.dimensionCount();
+			for (int i = 0; i < count; i++) {
+				TM1Dimension dimension = tm1server.getDimension(i);
+				String dimensionname = dimension.displayName;
+				if (!showControlObjects && dimensionname.startsWith("}")) {
+				} else {
+					TreeItem dimensionnode = new TreeItem(dimsnode, SWT.NONE);
+					dimensionnode.setImage(DIMICON);
+					dimensionnode.setData(dimension);
+					dimensionnode.setText(dimensionname);
 
-						if (dimension.expandedInExplorerTree) {
-							updateDimensionNode(dimensionnode);
-							dimensionnode.setExpanded(true);
-						} else {
-							TreeItem dimensionChildNode = new TreeItem(dimensionnode, SWT.NONE);
-							dimensionChildNode.setText("");
-						}
+					if (dimension.expandedInExplorerTree) {
+						updateDimensionNode(dimensionnode);
+						dimensionnode.setExpanded(true);
+					} else {
+						TreeItem dimensionChildNode = new TreeItem(dimensionnode, SWT.NONE);
+						dimensionChildNode.setText("");
 					}
 				}
-				dimsnode.setText("Dimensions");
-			} else {
-				checkForReconnect(dimsnode);
 			}
+			dimsnode.setText("Dimensions");
+
 		} catch (TM1RestException | URISyntaxException | IOException | JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1019,7 +1017,7 @@ public class ExportImportEditor extends Dialog {
 	public void updateProcessListNode(TreeItem processListNode) throws TM1RestException {
 		try {
 			processListNode.removeAll();
-			if (tm1server.readProcessesFromServer()) {
+			tm1server.readProcessesFromServer();
 				int count = tm1server.processCount();
 				for (int i = 0; i < count; i++) {
 					TM1Process process = tm1server.getProcess(i);
@@ -1034,9 +1032,6 @@ public class ExportImportEditor extends Dialog {
 				}
 				processListNode.setText("Procesess");
 				return;
-			} else {
-				checkForReconnect(processListNode);
-			}
 		} catch (URISyntaxException | IOException | JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1046,10 +1041,7 @@ public class ExportImportEditor extends Dialog {
 	public void updateChoreListNode(TreeItem choreListNode) {
 		try {
 			choreListNode.removeAll();
-			if (!tm1server.readChoresFromServer()) {
-				checkForReconnect(choreListNode);
-				return;
-			}
+			tm1server.readChoresFromServer();
 			int chorecount = tm1server.choreCount();
 			choreListNode.setText("Chores");
 			for (int i = 0; i < chorecount; i++) {
@@ -1199,14 +1191,15 @@ public class ExportImportEditor extends Dialog {
 			if (dimensionImportPath.exists()) {
 				for (File dimensionEntry : dimensionImportPath.listFiles()) {
 					if (dimensionEntry.isFile()) {
-						//System.out.println("Found dimension file " + dimensionEntry.getName());
+						// System.out.println("Found dimension file " + dimensionEntry.getName());
 						String dimensionName = dimensionEntry.getName().substring(0, dimensionEntry.getName().lastIndexOf('.'));
 						String dimensionDirectoryString = dimensionImportPath.getAbsolutePath() + "//" + dimensionName;
-						//System.out.println("Checking for dimension directory " + dimensionDirectoryString);
-						
+						// System.out.println("Checking for dimension directory " +
+						// dimensionDirectoryString);
+
 						File dimensionDir = new File(dimensionDirectoryString);
 						if (dimensionDir.exists()) {
-							//System.out.println("Found dimension directory " + dimensionDir);
+							// System.out.println("Found dimension directory " + dimensionDir);
 							FileReader fr = new FileReader(dimensionEntry);
 							BufferedReader br = new BufferedReader(fr);
 							OrderedJSONObject dimensionJSON = new OrderedJSONObject(br);
@@ -1214,8 +1207,8 @@ public class ExportImportEditor extends Dialog {
 							transferSpec.addDimension(transferDimension);
 							br.close();
 							for (File hierarchyEntry : dimensionDir.listFiles()) {
-								if (hierarchyEntry.isFile()){
-									//System.out.println("Found hierarchy file " + hierarchyEntry.getName());
+								if (hierarchyEntry.isFile()) {
+									// System.out.println("Found hierarchy file " + hierarchyEntry.getName());
 									String hierarchyName = hierarchyEntry.getName().substring(0, hierarchyEntry.getName().lastIndexOf('.'));
 									String hiearchyDirectoryName = dimensionDir + "//" + hierarchyName;
 									FileReader hierarchyFileReader = new FileReader(hierarchyEntry);
@@ -1225,10 +1218,10 @@ public class ExportImportEditor extends Dialog {
 									transferDimension.addHierarchy(transferHierarchy);
 									hierarchyBufferedReader.close();
 									File hierarchyDirectory = new File(hiearchyDirectoryName);
-									if (hierarchyDirectory.exists()){
-										//System.out.println("Found hierarchy directory " + hierarchyDirectory);
+									if (hierarchyDirectory.exists()) {
+										// System.out.println("Found hierarchy directory " + hierarchyDirectory);
 										for (File subsetEntry : hierarchyDirectory.listFiles()) {
-											if (subsetEntry.isFile()){
+											if (subsetEntry.isFile()) {
 												String subsetName = subsetEntry.getName().substring(0, subsetEntry.getName().lastIndexOf('.'));
 												FileReader subsetFileReader = new FileReader(subsetEntry);
 												BufferedReader subsetBufferedReader = new BufferedReader(subsetFileReader);
@@ -1236,7 +1229,7 @@ public class ExportImportEditor extends Dialog {
 												TransferSubset transferSubset = new TransferSubset(subsetName, hierarchyName, dimensionName, subsetJSON);
 												transferHierarchy.addSubset(transferSubset);
 												subsetBufferedReader.close();
-												//System.out.println("Found subset file " + subsetEntry.getName());
+												// System.out.println("Found subset file " + subsetEntry.getName());
 											}
 										}
 									} else {
@@ -1247,12 +1240,12 @@ public class ExportImportEditor extends Dialog {
 						} else {
 							System.out.println("Failed to find dimension directory " + dimensionDir);
 						}
-						//transferSpec.writeAll();
-						
-					} 
+						// transferSpec.writeAll();
+
+					}
 				}
 			}
-			
+
 			File cubeDirectory = new File(baseImportDirectory + "//cub");
 			if (cubeDirectory.exists()) {
 				for (File cubeEntry : cubeDirectory.listFiles()) {
@@ -1263,13 +1256,13 @@ public class ExportImportEditor extends Dialog {
 						OrderedJSONObject cubeJSON = new OrderedJSONObject(br);
 						TransferCube transferCube = new TransferCube(cubeName, cubeJSON);
 						transferSpec.addCube(transferCube);
-						//System.out.println("Found cube file " + cubeEntry.getAbsolutePath());
+						// System.out.println("Found cube file " + cubeEntry.getAbsolutePath());
 					} else {
-						//System.out.println("Filed to find cube file " + cubeEntry.getAbsolutePath());
+						// System.out.println("Filed to find cube file " + cubeEntry.getAbsolutePath());
 					}
 				}
 			}
-			
+
 			File processDirectory = new File(baseImportDirectory + "//pro");
 			if (processDirectory.exists()) {
 				for (File processEntry : processDirectory.listFiles()) {
@@ -1280,13 +1273,14 @@ public class ExportImportEditor extends Dialog {
 						OrderedJSONObject processJSON = new OrderedJSONObject(br);
 						TransferProcess transferProcess = new TransferProcess(processName, processJSON);
 						transferSpec.addProcess(transferProcess);
-						//System.out.println("Found process file " + processEntry.getAbsolutePath());
+						// System.out.println("Found process file " + processEntry.getAbsolutePath());
 					} else {
-						//System.out.println("Failed to find process file " + processEntry.getAbsolutePath());
+						// System.out.println("Failed to find process file " +
+						// processEntry.getAbsolutePath());
 					}
 				}
 			}
-			
+
 			File choreDirectory = new File(baseImportDirectory + "//cho");
 			if (choreDirectory.exists()) {
 				for (File choreEntry : choreDirectory.listFiles()) {
@@ -1297,13 +1291,13 @@ public class ExportImportEditor extends Dialog {
 						OrderedJSONObject choreJSON = new OrderedJSONObject(br);
 						TransferChore transferChore = new TransferChore(choreName, choreJSON);
 						transferSpec.addChore(transferChore);
-						//System.out.println("Found chore file " + choreEntry.getName());
+						// System.out.println("Found chore file " + choreEntry.getName());
 					}
 				}
 			}
-			
+
 			updateFileImportTree();
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1439,7 +1433,8 @@ public class ExportImportEditor extends Dialog {
 
 	private void setSourceTreeColumnSize() {
 		int columnCount = transferSourceTree.getColumnCount();
-		if (columnCount == 0) return;
+		if (columnCount == 0)
+			return;
 		Rectangle area = transferSourceTree.getClientArea();
 		int totalAreaWdith = area.width;
 		int lineWidth = transferSourceTree.getGridLineWidth();
@@ -1452,14 +1447,14 @@ public class ExportImportEditor extends Dialog {
 		TreeColumn lastCol = transferSourceTree.getColumns()[columnCount - 1];
 		lastCol.setWidth(diff + lastCol.getWidth());
 	}
-	
-	private void updateFileImportTree(){
-		
-		if (transferSpec.getCubeCount() > 0){
+
+	private void updateFileImportTree() {
+
+		if (transferSpec.getCubeCount() > 0) {
 			TreeItem cubesParentNode = new TreeItem(transferSourceTree, SWT.NONE);
 			cubesParentNode.setText("Cubes");
 			cubesParentNode.setImage(CUBEICON);
-			for (int i=0; i<transferSpec.getCubeCount(); i++){
+			for (int i = 0; i < transferSpec.getCubeCount(); i++) {
 				TransferCube cube = transferSpec.getCube(i);
 				TreeItem cubeNode = new TreeItem(cubesParentNode, SWT.NONE);
 				cubeNode.setText(cube.name);
@@ -1468,23 +1463,23 @@ public class ExportImportEditor extends Dialog {
 			}
 		}
 
-		if (transferSpec.getDimensionCount() > 0){
+		if (transferSpec.getDimensionCount() > 0) {
 			TreeItem dimParentNode = new TreeItem(transferSourceTree, SWT.NONE);
 			dimParentNode.setText("Dimensions");
 			dimParentNode.setImage(DIMICON);
-			for (int i=0; i<transferSpec.getDimensionCount(); i++){
+			for (int i = 0; i < transferSpec.getDimensionCount(); i++) {
 				TransferDimension dimension = transferSpec.getDimension(i);
 				TreeItem dimNode = new TreeItem(dimParentNode, SWT.NONE);
 				dimNode.setText(dimension.name);
 				dimNode.setImage(DIMICON);
 				dimNode.setData(dimension);
-				for (int j=0; j<dimension.getHierarchyCount(); j++){
+				for (int j = 0; j < dimension.getHierarchyCount(); j++) {
 					TransferHierarchy hierarchy = dimension.getHierarchy(j);
 					TreeItem hierarchyNode = new TreeItem(dimNode, SWT.NONE);
 					hierarchyNode.setText(hierarchy.name);
 					hierarchyNode.setImage(HIERICON);
 					hierarchyNode.setData(hierarchy);
-					for (int k=0; k<hierarchy.getSubsetCount(); k++){
+					for (int k = 0; k < hierarchy.getSubsetCount(); k++) {
 						TransferSubset subset = hierarchy.getSubset(k);
 						TreeItem subsetNode = new TreeItem(hierarchyNode, SWT.NONE);
 						subsetNode.setText(subset.name);
@@ -1495,12 +1490,12 @@ public class ExportImportEditor extends Dialog {
 			}
 			dimParentNode.setChecked(true);
 		}
-		
-		if (transferSpec.getProcessCount() > 0){
+
+		if (transferSpec.getProcessCount() > 0) {
 			TreeItem processParentNode = new TreeItem(transferSourceTree, SWT.NONE);
 			processParentNode.setText("Processes");
 			processParentNode.setImage(PROICON);
-			for (int i=0; i<transferSpec.getProcessCount(); i++){
+			for (int i = 0; i < transferSpec.getProcessCount(); i++) {
 				TransferProcess process = transferSpec.getProcess(i);
 				TreeItem processNode = new TreeItem(processParentNode, SWT.NONE);
 				processNode.setText(process.name);
@@ -1508,12 +1503,12 @@ public class ExportImportEditor extends Dialog {
 				processNode.setData(process);
 			}
 		}
-		
-		if (transferSpec.getChoreCount() > 0){
+
+		if (transferSpec.getChoreCount() > 0) {
 			TreeItem choreParentNode = new TreeItem(transferSourceTree, SWT.NONE);
 			choreParentNode.setText("Chores");
 			choreParentNode.setImage(CHOICON);
-			for (int i=0; i<transferSpec.getChoreCount(); i++){
+			for (int i = 0; i < transferSpec.getChoreCount(); i++) {
 				TransferChore chore = transferSpec.getChore(i);
 				TreeItem choreNode = new TreeItem(choreParentNode, SWT.NONE);
 				choreNode.setText(chore.name);
@@ -1523,8 +1518,8 @@ public class ExportImportEditor extends Dialog {
 		}
 
 	}
-	
-	private void runTransfer(){
+
+	private void runTransfer() {
 		try {
 			transferSpec.runTransfer();
 		} catch (TM1RestException | URISyntaxException | IOException ex) {
@@ -1533,7 +1528,7 @@ public class ExportImportEditor extends Dialog {
 			m.setText("Import Error");
 			m.setMessage(ex.toString());
 			m.open();
-			
+
 		}
 	}
 

@@ -80,7 +80,7 @@ public class TM1Cube extends TM1Object {
 			tm1server.get(request);
 			return true;
 		} catch (TM1RestException ex){
-			if (ex.getResponse() == 404){
+			if (ex.getErrorCode() == 404){
 				return false;
 			} else {
 				throw ex;
@@ -114,7 +114,7 @@ public class TM1Cube extends TM1Object {
 		try {
 		tm1server.get(req); 
 		} catch (TM1RestException ex){
-			if (ex.getResponse() == 404){
+			if (ex.getErrorCode() == 404){
 				return false;
 			} else {
 				throw ex;

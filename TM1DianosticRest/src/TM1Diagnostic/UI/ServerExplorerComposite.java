@@ -12,7 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.security.KeyManagementException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -94,7 +96,6 @@ public class ServerExplorerComposite extends Composite {
 	static private Image BLOBICON;
 	static private Image SECURITY_ICON;
 
-
 	static private Image SAVE;
 	static private Image SAVEAS;
 	static private Image EXECUTE;
@@ -144,13 +145,12 @@ public class ServerExplorerComposite extends Composite {
 
 	private Text connectionDetailsLabel;
 
-
 	private TabItem messageLogTab;
 	private TabItem threadLogTab;
 	private TabItem httpTraceTab;
 
 	private Table serverMessageLogTable;
-	//private Text messageLogRowCountText;
+	// private Text messageLogRowCountText;
 	private int messageLogRowCount;
 
 	private Runnable keepAliveTimer;
@@ -165,10 +165,9 @@ public class ServerExplorerComposite extends Composite {
 	public boolean modelConfigurationTabIsOpen;
 	private int[] modelConfigurationSashWeight;
 
-	//private Button threadMonitorFileLogCheckButton;
+	// private Button threadMonitorFileLogCheckButton;
 	private boolean logThreadsToFile;
 	private Label messageLogRowCountLabel;
-
 
 	private Text sessionIDText;
 
@@ -233,7 +232,7 @@ public class ServerExplorerComposite extends Composite {
 		keepAliveCheckButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				if (keepAliveCheckButton.getSelection()){
+				if (keepAliveCheckButton.getSelection()) {
 					startKeepAlive();
 				} else {
 					stopKeepAlive();
@@ -251,7 +250,7 @@ public class ServerExplorerComposite extends Composite {
 		controlObjectsButton.setToolTipText("Enable/Disable Control Objects");
 		controlObjectsButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		controlObjectsButton.setText("Control Objects");
-		
+
 		btnImport = new Button(composite_1, SWT.NONE);
 		btnImport.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -385,15 +384,15 @@ public class ServerExplorerComposite extends Composite {
 					updateCubeNode(node);
 				} else if (o instanceof TM1Dimension) {
 					try {
-						//System.out.println("Start expand");
+						// System.out.println("Start expand");
 						TM1Dimension dimension = (TM1Dimension) o;
 						dimension.expandedInExplorerTree = true;
 						updateDimensionNode(node);
-						//System.out.println("Finish expand");
-					} catch (Exception ex){
-						//System.out.println("Expand Exception");
+						// System.out.println("Finish expand");
+					} catch (Exception ex) {
+						// System.out.println("Expand Exception");
 						exception(ex);
-					} 
+					}
 
 				} else if (o instanceof TM1Hierarchy) {
 					TM1Hierarchy hierarchy = (TM1Hierarchy) o;
@@ -491,7 +490,7 @@ public class ServerExplorerComposite extends Composite {
 
 		serverExplorerContextMenu = new Menu(explorerTree);
 		explorerTree.setMenu(serverExplorerContextMenu);
-		modelConfigurationSashForm.setWeights(new int[] {1});
+		modelConfigurationSashForm.setWeights(new int[] { 1 });
 		serverExplorerContextMenu.addMenuListener(new MenuAdapter() {
 			public void menuShown(MenuEvent e) {
 				MenuItem[] items = serverExplorerContextMenu.getItems();
@@ -568,7 +567,7 @@ public class ServerExplorerComposite extends Composite {
 			ThreadMonitorComposite compositeThreadLog = new ThreadMonitorComposite(serverLoggingTabs, this, tm1server);
 			threadLogTab.setControl(compositeThreadLog);
 			threadLogTab.setText("Thread Monitor");
-		} catch (TM1RestException ex){
+		} catch (TM1RestException ex) {
 			exception(ex);
 		}
 
@@ -587,7 +586,7 @@ public class ServerExplorerComposite extends Composite {
 		sessionIDText.setText("TM1SessionID: " + tm1server.getSessionID());
 		try {
 			connectionDetailsLabel.setText("Host: " + tm1server.getAdminHostName() + "Model: " + tm1server.getName() + "Version: " + tm1server.readVersionFromServer());
-			
+
 			disconnectButton = new Button(composite, SWT.NONE);
 			disconnectButton.addSelectionListener(new SelectionAdapter() {
 				@Override
@@ -605,9 +604,7 @@ public class ServerExplorerComposite extends Composite {
 		}
 	}
 
-
-
-	public void updateTM1ServerNode()  {
+	public void updateTM1ServerNode() {
 		System.out.println("=> updateTM1ServerNode");
 		explorerTree.removeAll();
 
@@ -709,14 +706,15 @@ public class ServerExplorerComposite extends Composite {
 			}
 			cubesnode.setText("Cubes");
 
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			exception(ex);
 		}
 	}
 
 	public void updateCubeNode(TreeItem cubenode) {
 		try {
-			if (!(cubenode.getData() instanceof TM1Cube)) return;
+			if (!(cubenode.getData() instanceof TM1Cube))
+				return;
 			TM1Cube cube = (TM1Cube) cubenode.getData();
 			cubenode.removeAll();
 
@@ -747,7 +745,7 @@ public class ServerExplorerComposite extends Composite {
 				rulenode.setImage(RULEICON);
 			}
 
-			if (cube.checkServerForCellSecurity()){
+			if (cube.checkServerForCellSecurity()) {
 				TM1Cube cellSecurityCube = cube.getCellSecurityCube();
 				TreeItem cellSecurityCubeNode = new TreeItem(cubenode, SWT.NONE);
 				cellSecurityCubeNode.setText(cellSecurityCube.displayName);
@@ -755,7 +753,7 @@ public class ServerExplorerComposite extends Composite {
 				cellSecurityCubeNode.setImage(CUBEICON);
 				TreeItem cellSecurityCubeChildNode = new TreeItem(cellSecurityCubeNode, SWT.NONE);
 			}
-		} catch (TM1RestException | URISyntaxException | IOException ex){
+		} catch (TM1RestException | URISyntaxException | IOException ex) {
 			exception(ex);
 		}
 
@@ -810,7 +808,7 @@ public class ServerExplorerComposite extends Composite {
 					}
 				}
 			}
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			exception(ex);
 		}
 		dimsnode.setText("Dimensions");
@@ -840,7 +838,7 @@ public class ServerExplorerComposite extends Composite {
 					dimensionChildNode.setText("");
 				}
 			}
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			exception(ex);
 		}
 		// dimsnode.setText("Dimensions");
@@ -848,11 +846,12 @@ public class ServerExplorerComposite extends Composite {
 
 	public void updateDimensionNode(TreeItem dimnode) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		System.out.println("Start => updateDimensionNode " + dimnode.getText());
-		if (!(dimnode.getData() instanceof TM1Dimension)) return;
+		if (!(dimnode.getData() instanceof TM1Dimension))
+			return;
 		TM1Dimension dimension = (TM1Dimension) dimnode.getData();
 		dimnode.removeAll();
 		updateHierarchyListNode(dimnode);
-		if (dimension.checkServerForElementAttributes()){
+		if (dimension.checkServerForElementAttributes()) {
 			TM1Cube attributeCube = dimension.getElementAttributeCube();
 			TreeItem elementAttributesNode = new TreeItem(dimnode, SWT.NONE);
 			elementAttributesNode.setText(attributeCube.displayName);
@@ -860,7 +859,7 @@ public class ServerExplorerComposite extends Composite {
 			elementAttributesNode.setImage(CUBEICON);
 			TreeItem elementAttributesChildNode = new TreeItem(elementAttributesNode, SWT.NONE);
 		}
-		if (dimension.checkServerForElementSecurity()){
+		if (dimension.checkServerForElementSecurity()) {
 			TM1Cube securityCube = dimension.getElementSecurityCube();
 			TreeItem elementSecurityNode = new TreeItem(dimnode, SWT.NONE);
 			elementSecurityNode.setText(securityCube.displayName);
@@ -868,7 +867,7 @@ public class ServerExplorerComposite extends Composite {
 			elementSecurityNode.setImage(SECURITY_ICON);
 			TreeItem elementAttributesChildNode = new TreeItem(elementSecurityNode, SWT.NONE);
 		}
-		//System.out.println("Fin => updateDimensionNode " + dimnode.getText());
+		// System.out.println("Fin => updateDimensionNode " + dimnode.getText());
 
 	}
 
@@ -885,27 +884,26 @@ public class ServerExplorerComposite extends Composite {
 	}
 
 	public void reconnect() {
-		if (!tm1server.isAuthenticated()) {
-			ConnectAs dialog = new ConnectAs(shell, tm1server);
-			if (dialog.open()) {
-				Credential c = dialog.getcredential();
-				try {
-					if (tm1server.authenticate(c)) {
-						updateTM1ServerNode();
-						return;
-					} else {
-						MessageBox m = new MessageBox(shell, SWT.ERROR);
-						m.setText("Error Connecting to TM1 Server");
-						m.setMessage("!");
-						m.open();
-					}
-				} catch (KeyManagementException | NoSuchAlgorithmException | URISyntaxException | IOException | TM1RestException ex) {
-					//exception(ex);
+		try {
+			if (!tm1server.isAuthenticated()) {
+				ConnectAs dialog = new ConnectAs(shell, tm1server);
+				if (dialog.open()) {
+					Credential c = dialog.getcredential();
+					tm1server.authenticate(c);
+					updateTM1ServerNode();
+					return;
+				} else {
+					MessageBox m = new MessageBox(shell, SWT.ERROR);
+					m.setText("Error Connecting to TM1 Server");
+					m.setMessage("!");
+					m.open();
 				}
 			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
-	
+
 	public void updateHierarchyListNode(TreeItem dimensionnode) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		TM1Dimension dimension = (TM1Dimension) (dimensionnode.getData());
 		dimensionnode.removeAll();
@@ -973,7 +971,7 @@ public class ServerExplorerComposite extends Composite {
 				}
 			}
 			processListNode.setText("Procesess");
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			exception(ex);
 		}
 	}
@@ -996,7 +994,7 @@ public class ServerExplorerComposite extends Composite {
 				chorenode.setData(chore);
 			}
 
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			exception(ex);
 		}
 	}
@@ -1015,7 +1013,7 @@ public class ServerExplorerComposite extends Composite {
 				blobnode.setImage(BLOBICON);
 				blobnode.setData(blob);
 			}
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			exception(ex);
 		}
 	}
@@ -1035,7 +1033,7 @@ public class ServerExplorerComposite extends Composite {
 				appnode.setData(folder);
 				updateApplicationNode(appnode);
 			}
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			exception(ex);
 		}
 	}
@@ -1073,39 +1071,30 @@ public class ServerExplorerComposite extends Composite {
 			process.readProcessFromServer();
 			UI_ProcessParameterPrompt p = new UI_ProcessParameterPrompt(shell, process, this);
 			p.open();
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			errorMessage(tm1server.getErrorMessage());
 			exception(ex);
 		}
 	}
 
-	public boolean connectToTM1ServerAs() {
+	public void connectToTM1ServerAs() {
 		try {
 			TreeItem selectednode = explorerTree.getSelection()[0];
 			TM1Server tm1server = (TM1Server) (explorerTree.getSelection()[0].getData());
-			if (tm1server.readSecurityMode()) {
-				if (!tm1server.isAuthenticated()) {
-					while (!tm1server.isAuthenticated()) {
-						ConnectAs dialog = new ConnectAs(shell, tm1server);
-						if (dialog.open()) {
-							Credential c = dialog.getcredential();
-							if (tm1server.authenticate(c)) {
-								selectednode.setText(tm1server.getName() + " (" + tm1server.displayuser() + ")");
-								selectednode.setImage(CONNECTEDICON);
-								return true;
-							} else {
-								errorMessage(tm1server.getErrorMessage());
-							}
-						} else {
-							return false;
-						}
+			tm1server.readSecurityMode();
+			if (!tm1server.isAuthenticated()) {
+				while (!tm1server.isAuthenticated()) {
+					ConnectAs dialog = new ConnectAs(shell, tm1server);
+					if (dialog.open()) {
+						Credential c = dialog.getcredential();
+						tm1server.authenticate(c);
+						selectednode.setText(tm1server.getName() + " (" + tm1server.displayuser() + ")");
+						selectednode.setImage(CONNECTEDICON);
 					}
 				}
 			}
-			return false;
-		} catch (Exception ex){
+		} catch (Exception ex) {
 			exception(ex);
-			return false;
 		}
 	}
 
@@ -1145,8 +1134,9 @@ public class ServerExplorerComposite extends Composite {
 				TreeItem cubesNode = explorerTree.getSelection()[0];
 				CreateCube createCubeDialog = new CreateCube(shell, tm1server);
 				try {
-					if (createCubeDialog.open()) updateCubeListNode(cubesNode);
-				} catch (TM1RestException | URISyntaxException | IOException ex){
+					if (createCubeDialog.open())
+						updateCubeListNode(cubesNode);
+				} catch (TM1RestException | URISyntaxException | IOException ex) {
 					exception(ex);
 				}
 			}
@@ -1167,7 +1157,7 @@ public class ServerExplorerComposite extends Composite {
 		});
 	}
 
-	private void showDimensionsMenu()  {
+	private void showDimensionsMenu() {
 		MenuItem newDimensionMenuItem = new MenuItem(serverExplorerContextMenu, SWT.NONE);
 		newDimensionMenuItem.setText("Create Dimension");
 		newDimensionMenuItem.setEnabled(true);
@@ -1232,7 +1222,7 @@ public class ServerExplorerComposite extends Composite {
 						TM1Subset subset = hierarchy.getPrivateSubsetByName("Default");
 						openSubsetEditor(subset);
 					}
-				} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+				} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 					exception(ex);
 				}
 			}
@@ -1254,7 +1244,7 @@ public class ServerExplorerComposite extends Composite {
 					} else {
 						openViewEditor(cube);
 					}
-				} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+				} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 					exception(ex);
 				}
 			}
@@ -1352,7 +1342,7 @@ public class ServerExplorerComposite extends Composite {
 				} else {
 					cellSecurityMenuItem.setText("Create Cell Security Cube");
 				}
-			} catch (TM1RestException | URISyntaxException | IOException ex){
+			} catch (TM1RestException | URISyntaxException | IOException ex) {
 				exception(ex);
 			}
 
@@ -1416,7 +1406,7 @@ public class ServerExplorerComposite extends Composite {
 					exportQuickSelectedObjects();
 				}
 			});
-		} catch (TM1RestException | URISyntaxException | IOException ex){
+		} catch (TM1RestException | URISyntaxException | IOException ex) {
 			exception(ex);
 		}
 
@@ -1549,7 +1539,7 @@ public class ServerExplorerComposite extends Composite {
 						} else {
 							errorMessage(tm1server.getErrorMessage());
 						}
-					} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+					} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 						exception(ex);
 					}
 				}
@@ -1594,7 +1584,7 @@ public class ServerExplorerComposite extends Composite {
 				createNewHierarchy(dimension);
 			}
 		});
-		
+
 		MenuItem findParentCubesMenuItem = new MenuItem(serverExplorerContextMenu, SWT.NONE);
 		findParentCubesMenuItem.setText("List Parent Cubes");
 		findParentCubesMenuItem.addSelectionListener(new SelectionAdapter() {
@@ -1623,7 +1613,7 @@ public class ServerExplorerComposite extends Composite {
 			} else {
 				editElementAttributesMenuItem.setText("Edit Element Attributes");
 			}
-		} catch (TM1RestException | URISyntaxException | IOException ex){
+		} catch (TM1RestException | URISyntaxException | IOException ex) {
 			exception(ex);
 		}
 
@@ -1635,7 +1625,7 @@ public class ServerExplorerComposite extends Composite {
 			} else {
 				editElementSecurityMenuItem.setText("Edit Element Security");
 			}
-		} catch (TM1RestException | URISyntaxException | IOException ex){
+		} catch (TM1RestException | URISyntaxException | IOException ex) {
 			exception(ex);
 		}
 
@@ -1806,7 +1796,7 @@ public class ServerExplorerComposite extends Composite {
 						} else {
 							errorMessage(tm1server.getErrorMessage());
 						}
-					} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+					} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 						exception(ex);
 					}
 				}
@@ -1933,15 +1923,11 @@ public class ServerExplorerComposite extends Composite {
 		});
 	}
 
-	/*private void expandNode(TreeItem node, int level) {
-		node.setExpanded(true);
-		if (level - 1 < 1)
-			return;
-		for (int i = 0; i < node.getItemCount(); i++) {
-			TreeItem childNode = node.getItem(i);
-			expandNode(childNode, level - 1);
-		}
-	}*/
+	/*
+	 * private void expandNode(TreeItem node, int level) { node.setExpanded(true);
+	 * if (level - 1 < 1) return; for (int i = 0; i < node.getItemCount(); i++) {
+	 * TreeItem childNode = node.getItem(i); expandNode(childNode, level - 1); } }
+	 */
 
 	public TreeItem treeContains(Tree t, String s) {
 		for (int i = 0; i < t.getItemCount(); i++) {
@@ -2327,10 +2313,11 @@ public class ServerExplorerComposite extends Composite {
 				hierarchy.remove();
 				deleteCount++;
 
-				//TM1Server tm1server = hierarchy.getServer();
-				//String error = tm1server.getErrorMessage();
-				//noDeleteList = noDeleteList.concat("Hierarchy: " + hierarchy.displayName + "(" + error + ")\n");
-				//failedCount++;
+				// TM1Server tm1server = hierarchy.getServer();
+				// String error = tm1server.getErrorMessage();
+				// noDeleteList = noDeleteList.concat("Hierarchy: " + hierarchy.displayName +
+				// "(" + error + ")\n");
+				// failedCount++;
 
 			}
 			for (int i = 0; i < deleteDimensions.size(); i++) {
@@ -2338,10 +2325,11 @@ public class ServerExplorerComposite extends Composite {
 				dimension.remove();
 				deleteCount++;
 
-				//TM1Server tm1server = dimension.getServer();
-				//String error = tm1server.getErrorMessage();
-				//noDeleteList = noDeleteList.concat("Dimension: " + dimension.displayName + "(" + error + ")\n");
-				//failedCount++;
+				// TM1Server tm1server = dimension.getServer();
+				// String error = tm1server.getErrorMessage();
+				// noDeleteList = noDeleteList.concat("Dimension: " + dimension.displayName +
+				// "(" + error + ")\n");
+				// failedCount++;
 
 			}
 			for (int i = 0; i < deleteViews.size(); i++) {
@@ -2349,10 +2337,11 @@ public class ServerExplorerComposite extends Composite {
 				view.remove();
 				deleteCount++;
 
-				//TM1Server tm1server = view.getServer();
-				//String error = tm1server.getErrorMessage();
-				//noDeleteList = noDeleteList.concat("View: " + view.displayName + "(" + error + ")\n");
-				//failedCount++;
+				// TM1Server tm1server = view.getServer();
+				// String error = tm1server.getErrorMessage();
+				// noDeleteList = noDeleteList.concat("View: " + view.displayName + "(" + error
+				// + ")\n");
+				// failedCount++;
 
 			}
 			for (int i = 0; i < deleteCubes.size(); i++) {
@@ -2360,10 +2349,11 @@ public class ServerExplorerComposite extends Composite {
 				cube.remove();
 				deleteCount++;
 
-				//TM1Server tm1server = cube.getServer();
-				//String error = tm1server.getErrorMessage();
-				//noDeleteList = noDeleteList.concat("Cube: " + cube.displayName + "(" + error + ")\n");
-				//failedCount++;
+				// TM1Server tm1server = cube.getServer();
+				// String error = tm1server.getErrorMessage();
+				// noDeleteList = noDeleteList.concat("Cube: " + cube.displayName + "(" + error
+				// + ")\n");
+				// failedCount++;
 
 			}
 			for (int i = 0; i < deleteProcesses.size(); i++) {
@@ -2371,10 +2361,11 @@ public class ServerExplorerComposite extends Composite {
 				process.remove();
 				deleteCount++;
 
-				//TM1Server tm1server = process.getServer();
-				//String error = tm1server.getErrorMessage();
-				//noDeleteList = noDeleteList.concat("Process: " + process.displayName + "(" + error + ")\n");
-				//failedCount++;
+				// TM1Server tm1server = process.getServer();
+				// String error = tm1server.getErrorMessage();
+				// noDeleteList = noDeleteList.concat("Process: " + process.displayName + "(" +
+				// error + ")\n");
+				// failedCount++;
 
 			}
 			for (int i = 0; i < deleteChores.size(); i++) {
@@ -2382,10 +2373,11 @@ public class ServerExplorerComposite extends Composite {
 				chore.remove();
 				deleteCount++;
 
-				//TM1Server tm1server = chore.getServer();
-				//String error = tm1server.getErrorMessage();
-				//noDeleteList = noDeleteList.concat("Chore: " + chore.displayName + "(" + error + ")\n");
-				//failedCount++;
+				// TM1Server tm1server = chore.getServer();
+				// String error = tm1server.getErrorMessage();
+				// noDeleteList = noDeleteList.concat("Chore: " + chore.displayName + "(" +
+				// error + ")\n");
+				// failedCount++;
 
 			}
 
@@ -2394,10 +2386,11 @@ public class ServerExplorerComposite extends Composite {
 				blob.remove();
 				deleteCount++;
 
-				//TM1Server tm1server = blob.getServer();
-				//String error = tm1server.getErrorMessage();
-				//noDeleteList = noDeleteList.concat("Blob: " + blob.displayName + "\n(" + error + ")\n");
-				//failedCount++;
+				// TM1Server tm1server = blob.getServer();
+				// String error = tm1server.getErrorMessage();
+				// noDeleteList = noDeleteList.concat("Blob: " + blob.displayName + "\n(" +
+				// error + ")\n");
+				// failedCount++;
 			}
 
 			if (noDeleteList.equals("")) {
@@ -2410,7 +2403,7 @@ public class ServerExplorerComposite extends Composite {
 				errorMessage(errMessage);
 			}
 			return deleteCount;
-		} catch (Exception ex){
+		} catch (Exception ex) {
 			exception(ex);
 			return 0;
 		}
@@ -2443,14 +2436,14 @@ public class ServerExplorerComposite extends Composite {
 			if (!exportTempDirectory.exists()) {
 				exportTempDirectory.mkdirs();
 			}
-			
+
 			int exportOkCount = 0;
 			int exportFailedCount = 0;
 
 			for (int i = 0; i < tm1objects.size(); i++) {
 				TM1Object exportObject = (TM1Object) tm1objects.get(i);
 				if (exportObject instanceof TM1Dimension) {
-					TM1Dimension exportDimension = (TM1Dimension)exportObject;
+					TM1Dimension exportDimension = (TM1Dimension) exportObject;
 					if (exportDimension.writeDimensionToFile(exportTempDirectory.toString())) {
 						exportOkCount++;
 					} else {
@@ -2458,7 +2451,7 @@ public class ServerExplorerComposite extends Composite {
 					}
 				}
 				if (exportObject instanceof TM1Cube) {
-					TM1Cube exportcube = (TM1Cube)exportObject;
+					TM1Cube exportcube = (TM1Cube) exportObject;
 					if (exportcube.writeCubeToFile(exportTempDirectory.toString())) {
 						exportOkCount++;
 					} else {
@@ -2466,7 +2459,7 @@ public class ServerExplorerComposite extends Composite {
 					}
 				}
 				if (exportObject instanceof TM1Chore) {
-					TM1Chore exportChore = (TM1Chore)exportObject;
+					TM1Chore exportChore = (TM1Chore) exportObject;
 					if (exportChore.writeChoreToFile(exportTempDirectory.toString())) {
 						exportOkCount++;
 					} else {
@@ -2474,7 +2467,7 @@ public class ServerExplorerComposite extends Composite {
 					}
 				}
 				if (exportObject instanceof TM1Process) {
-					TM1Process exportProcess = (TM1Process)exportObject;
+					TM1Process exportProcess = (TM1Process) exportObject;
 					if (exportProcess.writeProcessToFile(exportTempDirectory.toString())) {
 						exportOkCount++;
 					} else {
@@ -2483,7 +2476,7 @@ public class ServerExplorerComposite extends Composite {
 				}
 
 			}
-			
+
 			FileOutputStream zipWriter = new FileOutputStream(exportTempDirectoryString + ".zip");
 			ZipOutputStream zip = new ZipOutputStream(zipWriter);
 			String dimensionTempExportDirString = exportTempDirectory.getAbsolutePath() + "//dim";
@@ -2494,28 +2487,27 @@ public class ServerExplorerComposite extends Composite {
 			File processTempExportDir = new File(processTempExportDirString);
 			String choreTempExportDirString = exportTempDirectory.getAbsolutePath() + "//cho";
 			File choreTempExportDir = new File(choreTempExportDirString);
-			
-			if (dimensionTempExportDir.exists()){
+
+			if (dimensionTempExportDir.exists()) {
 				ZipUtils.addFolderToZip("", dimensionTempExportDirString, zip);
 			}
-			
-			if (cubeTempExportDir.exists()){
+
+			if (cubeTempExportDir.exists()) {
 				ZipUtils.addFolderToZip("", cubeTempExportDirString, zip);
 			}
-			
-			if (processTempExportDir.exists()){
+
+			if (processTempExportDir.exists()) {
 				ZipUtils.addFolderToZip("", processTempExportDirString, zip);
 			}
-			
-			if (choreTempExportDir.exists()){
+
+			if (choreTempExportDir.exists()) {
 				ZipUtils.addFolderToZip("", choreTempExportDirString, zip);
 			}
-			
+
 			zip.close();
 			zipWriter.close();
 			recursiveDelete(exportTempDirectory);
-			
-			
+
 			if (exportFailedCount == 0) {
 				infoMessage("Export " + exportOkCount + " objects");
 			} else {
@@ -2530,14 +2522,14 @@ public class ServerExplorerComposite extends Composite {
 		}
 	}
 
-	public void disconnectServer()  {
-		//display.timerExec(-1, threadMonitorTimer);
-		//display.timerExec(-1, messageLogRefreshTimer);
+	public void disconnectServer() {
+		// display.timerExec(-1, threadMonitorTimer);
+		// display.timerExec(-1, messageLogRefreshTimer);
 		try {
 			tm1server.unauthenticate();
 			this.dispose();
 		} catch (URISyntaxException | IOException | JSONException | TM1RestException ex) {
-			if (ex instanceof TM1RestException){
+			if (ex instanceof TM1RestException) {
 				MessageBox m = new MessageBox(shell, SWT.ERROR);
 				m.setMessage("Failed to Disconnect");
 				m.setText(ex.toString());
@@ -2550,7 +2542,7 @@ public class ServerExplorerComposite extends Composite {
 		TransactionLogViewer transactionlog_dialog = new TransactionLogViewer(shell, tm1server);
 		transactionlog_dialog.open();
 	}
-	
+
 	public void openSandboxViewer() {
 		SandboxViewer sandboxviewer = new SandboxViewer(shell, tm1server);
 		sandboxviewer.open();
@@ -2565,7 +2557,7 @@ public class ServerExplorerComposite extends Composite {
 			} else {
 				searchResult.open(r);
 			}
-		} catch (TM1RestException ex){
+		} catch (TM1RestException ex) {
 			exception(ex);
 		}
 	}
@@ -2579,7 +2571,7 @@ public class ServerExplorerComposite extends Composite {
 			} else {
 				searchResult.open(r);
 			}
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			exception(ex);
 		}
 	}
@@ -2594,7 +2586,7 @@ public class ServerExplorerComposite extends Composite {
 			} else {
 				try {
 					searchResult.open(r);
-				} catch (TM1RestException ex){
+				} catch (TM1RestException ex) {
 					exception(ex);
 				}
 			}
@@ -2627,7 +2619,7 @@ public class ServerExplorerComposite extends Composite {
 
 		String objectName = tm1object.displayName;
 		if (tm1object instanceof TM1Cube) {
-			//TM1Cube cube = (TM1Cube) tm1object;
+			// TM1Cube cube = (TM1Cube) tm1object;
 
 			for (int i = 0; i < cubeListNode.getItemCount(); i++) {
 				TreeItem t = cubeListNode.getItem(i);
@@ -2659,7 +2651,7 @@ public class ServerExplorerComposite extends Composite {
 				}
 			}
 		} else if (tm1object instanceof TM1Dimension) {
-			//TM1Dimension dimension = (TM1Dimension) tm1object;
+			// TM1Dimension dimension = (TM1Dimension) tm1object;
 
 			for (int i = 0; i < dimensionListNode.getItemCount(); i++) {
 				TreeItem t = dimensionListNode.getItem(i);
@@ -2672,7 +2664,7 @@ public class ServerExplorerComposite extends Composite {
 			}
 		} else if (tm1object instanceof TM1Hierarchy) {
 			TM1Hierarchy hierarchy = (TM1Hierarchy) tm1object;
-			//TM1Dimension dimension = (TM1Dimension) hierarchy.getParent();
+			// TM1Dimension dimension = (TM1Dimension) hierarchy.getParent();
 
 			for (int i = 0; i < dimensionListNode.getItemCount(); i++) {
 				TreeItem t = dimensionListNode.getItem(i);
@@ -2736,7 +2728,7 @@ public class ServerExplorerComposite extends Composite {
 				}
 			}
 
-		} 
+		}
 	}
 
 	public void openSearch() {
@@ -2758,7 +2750,7 @@ public class ServerExplorerComposite extends Composite {
 	private void openProcessEditor(TM1Process process) {
 		try {
 			ProcessEditor editor = new ProcessEditor(this.getShell(), process);
-		} catch (TM1RestException ex){
+		} catch (TM1RestException ex) {
 			exception(ex);
 		}
 	}
@@ -2766,16 +2758,16 @@ public class ServerExplorerComposite extends Composite {
 	private void openProcessEditor(TM1Server tm1server) {
 		try {
 			ProcessEditor editor = new ProcessEditor(this.getShell(), tm1server);
-		} catch (TM1RestException ex){
+		} catch (TM1RestException ex) {
 			exception(ex);
 		}
 	}
-	
-	private void openExportImportEditor(){
+
+	private void openExportImportEditor() {
 		try {
 			ExportImportEditor exportImportDialog = new ExportImportEditor(shell, tm1server);
 			exportImportDialog.open();
-		} catch (TM1RestException ex){
+		} catch (TM1RestException ex) {
 			exception(ex);
 		}
 	}
@@ -2791,7 +2783,7 @@ public class ServerExplorerComposite extends Composite {
 	private void openBlobEditor(TM1Blob blob) {
 		try {
 			BlobEditor editor = new BlobEditor(this.getShell(), blob);
-		} catch (TM1RestException | URISyntaxException | IOException ex){
+		} catch (TM1RestException | URISyntaxException | IOException ex) {
 			exception(ex);
 		}
 	}
@@ -2799,11 +2791,10 @@ public class ServerExplorerComposite extends Composite {
 	private void openBlobEditor() {
 		try {
 			BlobEditor editor = new BlobEditor(this.getShell(), tm1server);
-		} catch (TM1RestException | URISyntaxException | IOException ex){
+		} catch (TM1RestException | URISyntaxException | IOException ex) {
 			exception(ex);
 		}
 	}
-
 
 	private void openViewEditor(TM1Cube cube, TM1View view) {
 		try {
@@ -2817,7 +2808,7 @@ public class ServerExplorerComposite extends Composite {
 	private void openViewEditor(TM1Cube cube) {
 		try {
 			ViewEditor editor = new ViewEditor(this.getShell(), cube);
-		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex){
+		} catch (TM1RestException | URISyntaxException | IOException | JSONException ex) {
 			exception(ex);
 		}
 	}
@@ -2825,38 +2816,38 @@ public class ServerExplorerComposite extends Composite {
 	private void openRuleEditor(TM1Cube cube) {
 		try {
 			RuleEditor editor = new RuleEditor(this.getShell(), cube);
-		} catch (TM1RestException ex){
+		} catch (TM1RestException ex) {
 			exception(ex);
 		}
 	}
-	
-	private void createNewDimension(){
+
+	private void createNewDimension() {
 		NewDimension newDimensionPrompt = new NewDimension(this.getShell(), tm1server);
-		if (newDimensionPrompt.open()){
-			
+		if (newDimensionPrompt.open()) {
+
 		}
 	}
 
-	private void createNewHierarchy(TM1Dimension dimension){
+	private void createNewHierarchy(TM1Dimension dimension) {
 		NewHierarchy newHierarchyPrompt = new NewHierarchy(this.getShell(), dimension);
-		if (newHierarchyPrompt.open()){
+		if (newHierarchyPrompt.open()) {
 			HierarchyEditor editor = new HierarchyEditor(this.getShell(), newHierarchyPrompt.getCreatedHierarchy());
 		}
 	}
-	
-	private void openHierarchyEditor(TM1Hierarchy hierarchy)  {
+
+	private void openHierarchyEditor(TM1Hierarchy hierarchy) {
 		HierarchyEditor editor = new HierarchyEditor(this.getShell(), hierarchy);
 	}
 
-	private void openHierarchyEditor(TM1Dimension dimension)  {
+	private void openHierarchyEditor(TM1Dimension dimension) {
 		HierarchyEditor editor = new HierarchyEditor(this.getShell(), dimension);
 	}
-	
-	private void openSubsetEditor(TM1Subset subset)  {
+
+	private void openSubsetEditor(TM1Subset subset) {
 		try {
 			SubsetEditor editor = new SubsetEditor(this.getShell(), subset);
 			editor.open();
-		} catch (Exception ex){
+		} catch (Exception ex) {
 			exception(ex);
 		}
 	}
@@ -2865,18 +2856,18 @@ public class ServerExplorerComposite extends Composite {
 		try {
 			SubsetEditor editor = new SubsetEditor(shell, hierarchy);
 			editor.open();
-		} catch (Exception ex){
+		} catch (Exception ex) {
 			exception(ex);
 		}
 	}
 
-	private void toggleControlObjects()  {
+	private void toggleControlObjects() {
 		showControlObjects = !showControlObjects;
 		updateTM1ServerNode();
 
 	}
 
-	private void startKeepAlive()  {
+	private void startKeepAlive() {
 		keepAliveTimer = new Runnable() {
 			public void run() {
 				display.timerExec(keepAliveInterval * 1000, this);
@@ -2891,11 +2882,11 @@ public class ServerExplorerComposite extends Composite {
 		display.timerExec(keepAliveInterval * 1000, keepAliveTimer);
 	}
 
-	private void stopKeepAlive(){
+	private void stopKeepAlive() {
 		display.timerExec(-1, keepAliveTimer);
 	}
 
-	private void openLoggerConfigWindow()  {
+	private void openLoggerConfigWindow() {
 		try {
 			LoggingConfiguration loggerConfigWindow = new LoggingConfiguration(shell, tm1server);
 		} catch (TM1RestException ex) {
@@ -2912,15 +2903,15 @@ public class ServerExplorerComposite extends Composite {
 		SecurityReport securityReportWindow = new SecurityReport(shell, tm1server);
 	}
 
-	private void exception(Exception ex){
+	private void exception(Exception ex) {
 		ex.printStackTrace();
-		if (ex instanceof TM1RestException){
-			if (((TM1RestException)ex).getResponse() == 401){
+		if (ex instanceof TM1RestException) {
+			if (((TM1RestException) ex).getErrorCode() == 401) {
 				MessageBox m = new MessageBox(shell, SWT.OK | SWT.CANCEL);
 				m.setText("Disconnected from " + tm1server.getName());
 				m.setMessage("Click OK to Reconnect");
 				int rc = m.open();
-				if (rc == SWT.OK){
+				if (rc == SWT.OK) {
 					this.reconnect();
 				} else {
 					this.dispose();
@@ -2933,42 +2924,42 @@ public class ServerExplorerComposite extends Composite {
 			m.open();
 		}
 	}
-	
-	public void setWrarchitectMainWindow(Wrarchitect wrarchitectMainWindow){
-		this.wrarchitectMainWindow = wrarchitectMainWindow; 
-	}
-	
-	public void recursiveDelete(File file) {
-        //to end the recursive loop
-        if (!file.exists()) return;
 
-        //if directory, go inside and call recursively
-        if (file.isDirectory()) {
-            for (File f : file.listFiles()) {
-                //call recursively
-                recursiveDelete(f);
-            }
-        }
-        //call delete to delete files and empty directory
-        
-        try {
-            Files.delete(file.toPath());
-        } catch (NoSuchFileException x) {
-            System.err.format("%s: no such" + " file or directory%n", file.toPath());
-        } catch (DirectoryNotEmptyException x) {
-            System.err.format("%s not empty%n", file.toPath());
-        } catch (IOException x) {
-            // File permission problems are caught here.
-            System.err.println(x);
-        }
-        
-        /*
-        if (file.delete()){
-            System.out.println("Deleted file/folder: "+file.getAbsolutePath());
-        } else{
-            System.out.println("Failed to delete file/folder: "+file.getAbsolutePath());
-        }
-        */
-    }
+	public void setWrarchitectMainWindow(Wrarchitect wrarchitectMainWindow) {
+		this.wrarchitectMainWindow = wrarchitectMainWindow;
+	}
+
+	public void recursiveDelete(File file) {
+		// to end the recursive loop
+		if (!file.exists())
+			return;
+
+		// if directory, go inside and call recursively
+		if (file.isDirectory()) {
+			for (File f : file.listFiles()) {
+				// call recursively
+				recursiveDelete(f);
+			}
+		}
+		// call delete to delete files and empty directory
+
+		try {
+			Files.delete(file.toPath());
+		} catch (NoSuchFileException x) {
+			System.err.format("%s: no such" + " file or directory%n", file.toPath());
+		} catch (DirectoryNotEmptyException x) {
+			System.err.format("%s not empty%n", file.toPath());
+		} catch (IOException x) {
+			// File permission problems are caught here.
+			System.err.println(x);
+		}
+
+		/*
+		 * if (file.delete()){
+		 * System.out.println("Deleted file/folder: "+file.getAbsolutePath()); } else{
+		 * System.out.println("Failed to delete file/folder: "+file.getAbsolutePath());
+		 * }
+		 */
+	}
 
 }
