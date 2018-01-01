@@ -122,7 +122,6 @@ public class ServerExplorerComposite extends Composite {
 	protected Display display;
 	protected Shell shell;
 
-	private Wrarchitect wrarchitectMainWindow;
 	private UI_SearchResult searchResult;
 
 	private TM1Server tm1server;
@@ -150,7 +149,6 @@ public class ServerExplorerComposite extends Composite {
 	private TabItem httpTraceTab;
 
 	private Table serverMessageLogTable;
-	// private Text messageLogRowCountText;
 	private int messageLogRowCount;
 
 	private Runnable keepAliveTimer;
@@ -168,6 +166,8 @@ public class ServerExplorerComposite extends Composite {
 	// private Button threadMonitorFileLogCheckButton;
 	private boolean logThreadsToFile;
 	private Label messageLogRowCountLabel;
+	
+	private ThreadMonitorComposite threadMonitorComposite;
 
 	private Text sessionIDText;
 
@@ -563,13 +563,13 @@ public class ServerExplorerComposite extends Composite {
 		messageLogTab.setText("Message Log");
 
 		threadLogTab = new TabItem(serverLoggingTabs, SWT.NONE);
-		try {
-			ThreadMonitorComposite compositeThreadLog = new ThreadMonitorComposite(serverLoggingTabs, this, tm1server);
-			threadLogTab.setControl(compositeThreadLog);
+		//try {
+			threadMonitorComposite = new ThreadMonitorComposite(serverLoggingTabs, this, tm1server);
+			threadLogTab.setControl(threadMonitorComposite);
 			threadLogTab.setText("Thread Monitor");
-		} catch (TM1RestException ex) {
-			exception(ex);
-		}
+		//} catch (TM1RestException ex) {
+		//	exception(ex);
+		//}
 
 		Composite composite = new Composite(this, SWT.NONE);
 		composite.setLayout(new GridLayout(3, false));
@@ -750,7 +750,7 @@ public class ServerExplorerComposite extends Composite {
 				TreeItem cellSecurityCubeNode = new TreeItem(cubenode, SWT.NONE);
 				cellSecurityCubeNode.setText(cellSecurityCube.displayName);
 				cellSecurityCubeNode.setData(cellSecurityCube);
-				cellSecurityCubeNode.setImage(CUBEICON);
+				cellSecurityCubeNode.setImage(SECURITY_ICON);
 				TreeItem cellSecurityCubeChildNode = new TreeItem(cellSecurityCubeNode, SWT.NONE);
 			}
 		} catch (TM1RestException | URISyntaxException | IOException ex) {
@@ -2523,9 +2523,9 @@ public class ServerExplorerComposite extends Composite {
 	}
 
 	public void disconnectServer() {
-		// display.timerExec(-1, threadMonitorTimer);
-		// display.timerExec(-1, messageLogRefreshTimer);
 		try {
+			//1
+			threadMonitorComposite.stopThreadMonitor();
 			tm1server.unauthenticate();
 			this.dispose();
 		} catch (URISyntaxException | IOException | JSONException | TM1RestException ex) {
@@ -2925,9 +2925,9 @@ public class ServerExplorerComposite extends Composite {
 		}
 	}
 
-	public void setWrarchitectMainWindow(Wrarchitect wrarchitectMainWindow) {
-		this.wrarchitectMainWindow = wrarchitectMainWindow;
-	}
+	//public void setWrarchitectMainWindow(Wrarchitect wrarchitectMainWindow) {
+	//	this.wrarchitectMainWindow = wrarchitectMainWindow;
+	//}
 
 	public void recursiveDelete(File file) {
 		// to end the recursive loop

@@ -1062,20 +1062,20 @@ public class TM1Server {
 		return encoded;
 	}
 
-	public void authenticate(Credential c) throws URISyntaxException, KeyManagementException, NoSuchAlgorithmException, ClientProtocolException, IOException, TM1RestException, KeyStoreException, CertificateException {
+	public boolean authenticate(Credential c) throws URISyntaxException, KeyManagementException, NoSuchAlgorithmException, ClientProtocolException, IOException, TM1RestException, KeyStoreException, CertificateException {
 		try {
 			String authHeader;
 			if (securitymode.equals("CAM")) {
 				String encoding = base64Encode(c.getusername() + ":" + c.getpassword() + ":" + c.getnamespace());
 				connecteduser = c.getnamespace() + "\\" + c.getusername();
 				authHeader = "CAMNamespace " + new String(encoding);
-				System.out.println("Auth header: " + authHeader);
+				//System.out.println("Auth header: " + authHeader);
 			} else if (securitymode.equals("BASIC")) {
 				String encoding = base64Encode(c.getusername() + ":" + c.getpassword());
 				System.out.println("base64Encode " + encoding);
 				connecteduser = c.getusername();
 				authHeader = "Basic " + new String(encoding);
-				System.out.println("Auth header: " + authHeader);
+				//System.out.println("Auth header: " + authHeader);
 			} else {
 				TM1RestException ex = new TM1RestException(1, "Failed to read server security mode");
 				throw ex;
@@ -1091,7 +1091,6 @@ public class TM1Server {
 			if (protocol.equals("https")) {
 				KeyStore keyStore = KeyStore.getInstance("JKS");
 				File keystoreF = new File(keystoreFile);
-				System.out.println("Keystore file: " + keystoreF.getAbsolutePath());
 				FileInputStream instream = new FileInputStream(keystoreFile);
 				keyStore.load(instream, keystorePass.toCharArray());
 				instream.close();
@@ -1117,15 +1116,18 @@ public class TM1Server {
 						// System.out.println("TM1SessionID is now " + cookie.getValue());
 						TM1SessionId = cookie.getValue();
 						authenticated = true;
+						return true;
 					}
 				}
 			} else {
-				TM1RestException ex = new TM1RestException(1, "Server responded with " + responseStatus + " during authentication");
-				throw ex;
+				System.out.println("Failed to authenticate. Server returned " + responseStatus + " response");
+				return false;
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
+			return false;
 		}
+		return false;
 	}
 
 	public boolean isRestEnabled() {

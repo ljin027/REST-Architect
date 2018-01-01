@@ -55,12 +55,7 @@ public class ServerConnectorComposite extends Composite {
 	public boolean HTTPDEBUG;
 
 	private TabFolder folders;
-	// private TabItem activeTab;
-	// private TabItem connectorTab;
 
-	private Wrarchitect wrarchitectMainWindow;
-
-	private List<CTabItem> tm1ServerTabs;
 	private List<TM1Admin> adminservers;
 
 	public ServerConnectorComposite(Composite parent) {
@@ -339,11 +334,7 @@ public class ServerConnectorComposite extends Composite {
 			tm1admintreeitem.setData(adminserver);
 			refreshTM1AdminHostTree(tm1admintreeitem);
 			tm1admintreeitem.setExpanded(true);
-			// if (adminserver.isExpanded()){
-			// tm1admintreeitem.setExpanded(true);
-			// }
 		}
-
 	}
 
 	public void removeTM1ServerTree(TreeItem servernode) {
@@ -386,7 +377,7 @@ public class ServerConnectorComposite extends Composite {
 
 	public void connectToTM1ServerAs() {
 		try {
-			//System.out.println("=> connectToTM1ServerAs");
+			// System.out.println("=> connectToTM1ServerAs");
 			TreeItem selectednode = connectionsTree.getSelection()[0];
 			TM1ServerStub tm1ServerStub = (TM1ServerStub) (connectionsTree.getSelection()[0].getData());
 			TM1Server tm1Server;
@@ -396,27 +387,33 @@ public class ServerConnectorComposite extends Composite {
 				tm1Server = new TM1Server(tm1ServerStub.hostname, tm1ServerStub.name, tm1ServerStub.port, tm1ServerStub.useSSL);
 			}
 			tm1Server.readSecurityMode();
-			//System.out.println("Read Security Mode OK");
+			// System.out.println("Read Security Mode OK");
 			if (!tm1Server.isAuthenticated()) {
-				//System.out.println("Not Authenticated Yet");
+				// System.out.println("Not Authenticated Yet");
 				while (!tm1Server.isAuthenticated()) {
-					//System.out.println("Still Not Authenticated");
+					// System.out.println("Still Not Authenticated");
 					ConnectAs dialog = new ConnectAs(shell, tm1Server);
 					if (dialog.open()) {
 						Credential c = dialog.getcredential();
-						//System.out.println("Connecting as " + c.username);
-						tm1Server.authenticate(c);
-
-						TabItem serverExplorerTab = new TabItem(folders, SWT.CLOSE);
-						serverExplorerTab.setText(tm1Server.getAdminHostName() + ":" + tm1Server.getName());
-						ServerExplorerComposite serverExplorerComposite = new ServerExplorerComposite(folders, tm1Server);
-						serverExplorerComposite.setWrarchitectMainWindow(wrarchitectMainWindow);
-						serverExplorerTab.setControl(serverExplorerComposite);
-						serverExplorerComposite.setLayout(new GridLayout(1, false));
-						serverExplorerComposite.updateTM1ServerNode();
-						selectednode.setText(tm1Server.getName() + " (" + tm1Server.displayuser() + ")");
-						selectednode.setImage(CONNECTEDICON);
-						folders.setSelection(folders.getItemCount() - 1);
+						// System.out.println("Connecting as " + c.username);
+						if (tm1Server.authenticate(c)) {
+							TabItem serverExplorerTab = new TabItem(folders, SWT.CLOSE);
+							serverExplorerTab.setText(tm1Server.getAdminHostName() + ":" + tm1Server.getName());
+							ServerExplorerComposite serverExplorerComposite = new ServerExplorerComposite(folders, tm1Server);
+							serverExplorerTab.setControl(serverExplorerComposite);
+							serverExplorerComposite.setLayout(new GridLayout(1, false));
+							serverExplorerComposite.updateTM1ServerNode();
+							selectednode.setText(tm1Server.getName() + " (" + tm1Server.displayuser() + ")");
+							selectednode.setImage(CONNECTEDICON);
+							folders.setSelection(folders.getItemCount() - 1);
+						} else {
+							MessageBox m = new MessageBox(shell, SWT.ERROR | SWT.OK);
+							m.setText("Error");
+							m.setMessage("Failed to authenticate. Invalid credentials");
+							m.open();
+						}
+					} else {
+						break;
 					}
 				}
 			}
@@ -425,8 +422,8 @@ public class ServerConnectorComposite extends Composite {
 			if (ex instanceof TM1RestException) {
 				TM1RestException restException = (TM1RestException) ex;
 				MessageBox m = new MessageBox(shell, SWT.ERROR | SWT.OK);
-				m.setText("Error Connecting to TM1 Server");
-				m.setMessage("Error: " + restException.getErrorCode());
+				m.setText("Error");
+				m.setMessage("Failed to connect to server: " + restException.getErrorCode());
 				if (m.open() == SWT.OK) {
 					connectToTM1ServerAs();
 				}
@@ -436,10 +433,6 @@ public class ServerConnectorComposite extends Composite {
 				m.setMessage(ex.getMessage());
 			}
 		}
-	}
-
-	private void doConnection() {
-
 	}
 
 	public boolean disconnectFromTM1Server() {
@@ -455,17 +448,6 @@ public class ServerConnectorComposite extends Composite {
 
 	public void setFolders(TabFolder folders) {
 		this.folders = folders;
-	}
-
-	/*
-	 * public void setActiveTab(TabItem activeTab){ this.activeTab = activeTab; }
-	 * 
-	 * public void setConnectorTab(TabItem connectorTab){ this.connectorTab =
-	 * connectorTab; }
-	 */
-
-	public void setWrarchitectMainWindow(Wrarchitect wrarchitectMainWindow) {
-		this.wrarchitectMainWindow = wrarchitectMainWindow;
 	}
 
 }

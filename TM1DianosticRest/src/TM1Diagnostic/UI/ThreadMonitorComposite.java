@@ -54,7 +54,7 @@ public class ThreadMonitorComposite extends Composite {
 
 	private TM1Server tm1server;
 
-	public ThreadMonitorComposite(Composite parent, ServerExplorerComposite explorer, TM1Server tm1server) throws TM1RestException {
+	public ThreadMonitorComposite(Composite parent, ServerExplorerComposite explorer, TM1Server tm1server) {
 		super(parent, SWT.EMBEDDED);
 		this.tm1server = tm1server;
 		display = parent.getDisplay();
@@ -62,7 +62,7 @@ public class ThreadMonitorComposite extends Composite {
 	}
 
 
-	private void onOpen() throws TM1RestException {
+	private void onOpen() {
 		setLayout(new GridLayout(1, false));
 
 		Composite topRowComposite = new Composite(this, SWT.NONE);
