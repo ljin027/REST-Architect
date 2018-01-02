@@ -300,20 +300,6 @@ public class Wrarchitect {
 		}
 	}
 	
-
-	/*
-	public void removeTM1ServerTree(TreeItem servernode) {
-		servernode.removeAll();
-	}
-	*/
-
-	public void expandNode(TreeItem node) {
-		node.setExpanded(true);
-		for (int i = 0; i < node.getItemCount(); i++) {
-			expandNode(node.getItem(i));
-		}
-	}
-
 	public void infoMessage(String message) {
 		MessageBox m = new MessageBox(shell, SWT.ICON_INFORMATION);
 		m.setMessage(message);
@@ -372,8 +358,6 @@ public class Wrarchitect {
 							serverExplorerTab.setControl(serverExplorerComposite);
 							serverExplorerComposite.setLayout(new GridLayout(1, false));
 							serverExplorerComposite.updateTM1ServerNode();
-							//selectednode.setText(tm1Server.getName() + " (" + tm1Server.displayuser() + ")");
-							//selectednode.setImage(CONNECTEDICON);
 							folders.setSelection(folders.getItemCount() - 1);
 						} else {
 							MessageBox m = new MessageBox(shell, SWT.ERROR | SWT.OK);
@@ -448,10 +432,8 @@ public class Wrarchitect {
 			Menu m = new Menu(adminServerMenuItem);
 			adminServerMenuItem.setMenu(m);
 			for (int j = 0; j < adminServer.getservers().size(); j++) {
-				System.out.println(j);
 				TM1ServerStub tm1ServerStub = adminServer.getserver(j);
-				//TreeItem tm1serevrtreeitem = new TreeItem(tm1admintreeitem, SWT.NONE);
-				final MenuItem serverMenuItem = new MenuItem(m, SWT.NONE);
+				final MenuItem serverMenuItem = new MenuItem(m, SWT.CASCADE);
 				if (tm1ServerStub.isRestEnabled()) {
 					serverMenuItem.setText(tm1ServerStub.name);
 				} else {
@@ -466,6 +448,8 @@ public class Wrarchitect {
 						connectToServer(tm1ServerStub);
 					}
 				});
+				
+		
 			}
 		}
 

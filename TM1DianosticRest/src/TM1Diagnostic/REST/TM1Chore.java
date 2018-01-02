@@ -198,5 +198,10 @@ public class TM1Chore extends TM1Object {
 		fw.close();
 		return true;
 	}
+	
+	public OrderedJSONObject getExportJSON() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+		tm1server.get(entity);
+		return new OrderedJSONObject(tm1server.response);
+	}
 
 }

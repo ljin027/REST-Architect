@@ -261,7 +261,7 @@ public class ServerExplorerComposite extends Composite {
 		GridData gd_btnImport = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_btnImport.widthHint = 120;
 		btnImport.setLayoutData(gd_btnImport);
-		btnImport.setText("Import");
+		btnImport.setText("Transfer");
 
 		transactionQueryButton = new Button(composite_1, SWT.NONE);
 		transactionQueryButton.addSelectionListener(new SelectionAdapter() {
@@ -2235,7 +2235,7 @@ public class ServerExplorerComposite extends Composite {
 	}
 
 	public void exportTM1Objects() {
-		ExportImportEditor exportDialog = new ExportImportEditor(shell, tm1server);
+		TransferEditor exportDialog = new TransferEditor(shell, tm1server);
 		try {
 			if (exportDialog.open()) {
 				// refresh ?
@@ -2765,8 +2765,10 @@ public class ServerExplorerComposite extends Composite {
 
 	private void openExportImportEditor() {
 		try {
-			ExportImportEditor exportImportDialog = new ExportImportEditor(shell, tm1server);
-			exportImportDialog.open();
+			TransferEditor transferEditor = new TransferEditor(shell, tm1server);
+			if (transferEditor.open()) {
+				this.updateTM1ServerNode();
+			}
 		} catch (TM1RestException ex) {
 			exception(ex);
 		}
@@ -2954,12 +2956,7 @@ public class ServerExplorerComposite extends Composite {
 			System.err.println(x);
 		}
 
-		/*
-		 * if (file.delete()){
-		 * System.out.println("Deleted file/folder: "+file.getAbsolutePath()); } else{
-		 * System.out.println("Failed to delete file/folder: "+file.getAbsolutePath());
-		 * }
-		 */
+
 	}
 
 }

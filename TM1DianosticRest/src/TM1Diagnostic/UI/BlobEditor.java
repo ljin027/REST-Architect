@@ -35,6 +35,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 
 
 public class BlobEditor {
@@ -55,6 +57,10 @@ public class BlobEditor {
 	private MenuItem mntmSaveAs;
 	private MenuItem mntmExit;
 	
+
+	/**
+	 * @wbp.parser.constructor
+	 */
 
 	public BlobEditor(Shell parent, TM1Blob blob) throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
 		this.blob = blob;
@@ -104,6 +110,17 @@ public class BlobEditor {
 		mntmNewSubmenu.setMenu(menu_1);
 		
 		mntmSave = new MenuItem(menu_1, SWT.NONE);
+		mntmSave.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				try {
+					save();
+				} catch (TM1RestException | URISyntaxException | IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
 		mntmSave.setText("Save");
 		
 		mntmSaveAs = new MenuItem(menu_1, SWT.NONE);

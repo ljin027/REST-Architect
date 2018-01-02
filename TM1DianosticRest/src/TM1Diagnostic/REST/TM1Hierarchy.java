@@ -13,6 +13,8 @@ import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.OrderedJSONObject;
 
+import TM1Diagnostic.TransferSubset;
+
 public class TM1Hierarchy extends TM1Object {
 
 	static public int PUBLIC = 0;
@@ -38,7 +40,7 @@ public class TM1Hierarchy extends TM1Object {
 	public boolean privateSubsetsExpandedInServerExplorer;
 
 	private TM1Element defaultElement;
-
+	
 	public TM1Hierarchy(String name, TM1Server tm1server, TM1Dimension parent) {
 		super(name, TM1Object.HIERARCHY, parent, tm1server);
 		this.dimension = parent;
@@ -50,6 +52,15 @@ public class TM1Hierarchy extends TM1Object {
 
 		subsetsExpandedInServerExplorer = false;
 		privateSubsetsExpandedInServerExplorer = false;
+	}
+	
+	public void createOnServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException{
+		String request = "Dimensions('" + dimension + "')/Hierarchies";
+		tm1server.post(request, json);
+		for (int i=0; i<subsets.size(); i++){
+			TM1Subset subset = subsets.get(i);
+			//subset.importToServer(server);
+		}
 	}
 
 	public int aliasCount() {

@@ -483,6 +483,7 @@ public class TM1Server {
 		if (httpDebug) {
 			String message = "PATCH, HTTP " + responseStatus + ", " + uri.toString();
 			logPrintWriter.println(message);
+			logPrintWriter.println(payload.toString());
 			logPrintWriter.flush();
 			System.out.println(message);
 			System.out.println(payload.toString());

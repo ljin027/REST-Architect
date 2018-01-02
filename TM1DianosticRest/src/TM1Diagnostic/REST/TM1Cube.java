@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.*;
 //import com.ibm.xtq.ast.parsers.xpath.Test;
 
 import TM1Diagnostic.SearchResult;
+import TM1Diagnostic.TransferView;
 
 //import org.json.JSONObject;
 
@@ -403,11 +404,21 @@ public class TM1Cube extends TM1Object {
 		}
 	}
 	
-	public boolean writeCubeToFile(String dir) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
-		// export cube and rules
-		
-		//System.out.println("Function -> writeCubeToFile");
+	public void createOnServer(TM1Server server) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException{
+		String request = "Cubes";
+		server.post(request, this.json);
+		for (int i=0; i<views.size(); i++){
+			//TM1View view = views.get(i);
+		}
+	}
 	
+	public OrderedJSONObject getExportJSON() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+		tm1server.get(entity);
+		return new OrderedJSONObject(tm1server.response);
+	}
+	
+	public boolean writeCubeToFile(String dir) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+
 		File cubeDir = new File(dir + "//cub");
 		if (!cubeDir.exists()){
 			cubeDir.mkdir();
@@ -415,11 +426,19 @@ public class TM1Cube extends TM1Object {
 		
 		String request = entity;
 		tm1server.get(request);
-		OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
+		OrderedJSONObject exportJSON = new OrderedJSONObject(tm1server.response);
+		JSONArray dimensionJSONArrayExport = new JSONArray();
+		this.readCubeDimensionsFromServer();
+		for (int i=0; i<dimensions.size(); i++) {
+			System.out.println("Adding dim: " + i);
+			TM1Dimension dimension = dimensions.get(i);
+			dimensionJSONArrayExport.add(dimension.getEntity());
+		}
+		exportJSON.put("Dimensions@odata.bind", dimensionJSONArrayExport);
 		FileWriter fw = new FileWriter(cubeDir + "//" + displayName + ".cube", false);
 		BufferedWriter bw = new BufferedWriter(fw);
 		try {
-			bw.write(jresponse.toString());
+			bw.write(exportJSON.toString());
 		} catch (IOException e) {
 	        e.printStackTrace();
 	    } finally {

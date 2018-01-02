@@ -16,6 +16,8 @@ import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.OrderedJSONObject;
 
+import TM1Diagnostic.TransferHierarchy;
+
 public class TM1Dimension extends TM1Object {
 
 	static public String NUMERIC = "Numeric";
@@ -23,17 +25,38 @@ public class TM1Dimension extends TM1Object {
 	static public String CONSOLIDATED = "Consolidated";
 
 	public boolean heirarchiesExpandedInServerExplorer;
+	private OrderedJSONObject importJSON;
 
 	private List<TM1Hierarchy> heirarchies;
 
 	private String update_name;
 	protected String unique_name;
+	
+	
+	public TM1Dimension(String name, OrderedJSONObject dimensionJSON, TM1Server tm1server) {
+		super(name, TM1Object.DIMENSION, tm1server);
+		this.importJSON = dimensionJSON;
+		heirarchies = new ArrayList<TM1Hierarchy>();
+		unique_name = "[" + displayName + "]";
+		heirarchiesExpandedInServerExplorer = false;
+	}
 
 	public TM1Dimension(String name, TM1Server tm1server) {
 		super(name, TM1Object.DIMENSION, tm1server);
 		heirarchies = new ArrayList<TM1Hierarchy>();
 		unique_name = "[" + displayName + "]";
 		heirarchiesExpandedInServerExplorer = false;
+	}
+	
+	public void createOnServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException{
+		String request = "Dimensions";
+		tm1server.post(request, importJSON);
+		for (int i=0; i<heirarchies.size(); i++){
+			TM1Hierarchy hierarchy = heirarchies.get(i);
+			if (!hierarchy.name.equals("Leaves")){
+				hierarchy.createOnServer();
+			}
+		}
 	}
 
 	public int hierarchyCount() {
@@ -43,6 +66,11 @@ public class TM1Dimension extends TM1Object {
 	public void remove() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException {
 		String request = entity;
 		tm1server.delete(request);
+	}
+	
+	public OrderedJSONObject getExportJSON() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+		tm1server.get(entity);
+		return new OrderedJSONObject(tm1server.response);
 	}
 
 	public void readHierarchiesFromServer() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
