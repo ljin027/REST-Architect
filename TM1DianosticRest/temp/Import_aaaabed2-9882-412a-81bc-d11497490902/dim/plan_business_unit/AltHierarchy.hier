@@ -1,0 +1,1 @@
+{"@odata.context":"..\/$metadata#Dimensions('plan_business_unit')\/Hierarchies(Elements)\/$entity","@odata.etag":"W\/\"2869dimAttributes20180101040004326\"","Name":"AltHierarchy","UniqueName":"[plan_business_unit].[AltHierarchy]","Cardinality":0,"Structure":0,"Visible":true,"Attributes":{"Caption":"AltHierarchy"},"Elements":[]}

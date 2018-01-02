@@ -1,0 +1,165 @@
+{
+    "@odata.context": "$metadata#Processes/$entity",
+    "Name": "_ImportCube",
+    "HasSecurityAccess": false,
+    "PrologProcedure": "\r\n#****Begin: Generated Statements***\r\n#****End: Generated Statements****\r\n\r\n\r\nIF ( CubeExists ( pCubeName ) = 0 );\r\n   ProcessError;\r\nENDIF;\r\n\r\ndimensionCount = 1;\r\ncurrentDimension = TABDIM ( pCubeName, dimensionCount );\r\nASCIIOUTPUT ( 'debug.txt', 'Current dimension: ' | currentDimension );\r\nWHILE ( currentDimension @<> '' );\r\n  ASCIIOUTPUT ( 'debug.txt', 'Current dimension: ' | currentDimension );\r\n\r\n  dimensionCount = dimensionCount + 1;\r\n  currentDimension =  TabDim ( pCubeName, dimensionCount );\r\nEND;\r\n\r\ndimensionCount = dimensionCount - 1;\r\n\r\nlastDimension = TabDim ( pCubeName, dimensionCount );\r\n\r\nASCIIOUTPUT ( 'debug.txt', 'Dim count: ' | NumberToString ( dimensionCount ) | ' Last Dimension: ' | lastDimension );\r\n\r\n\r\nDatasourceType = 'CHARACTERDELIMITED';\r\nDatasourceNameForServer=pFileName;",
+    "MetadataProcedure": "\r\n#****Begin: Generated Statements***\r\n#****End: Generated Statements****",
+    "DataProcedure": "\r\n#****Begin: Generated Statements***\r\n#****End: Generated Statements****\r\n\r\n\r\n\r\nIF ( dimensionCount = 2 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V2 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V3 ), pCubeName, V1, V2 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V2 ) @= 'S');  \r\n\t\t  CELLPUTS ( V3, pCubeName, V1, V2 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 3 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V3 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V4 ), pCubeName, V1, V2, V3 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V3 ) @= 'S');  \r\n\t\t  CELLPUTS ( V4, pCubeName, V1, V2, V3 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 4 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3, V4 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V4 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V5 ), pCubeName, V1, V2, V3, V4 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V4 ) @= 'S');  \r\n\t\t  CELLPUTS ( V5, pCubeName, V1, V2, V3, V4 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 5 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3, V4, V5 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V5 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V6 ), pCubeName, V1, V2, V3, V4, V5 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V6 ) @= 'S');  \r\n\t\t  CELLPUTS ( V4, pCubeName, V1, V2, V3, V4, V5 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 6 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3, V4, V5, V6 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V6 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V7 ), pCubeName, V1, V2, V3, V4, V5, V6 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V6 ) @= 'S');  \r\n\t\t  CELLPUTS ( V7, pCubeName, V1, V2, V3, V4, V5, V6 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 7 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3, V4, V5, V6, V7 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V7 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V8 ), pCubeName, V1, V2, V3, V4, V5, V6, V7 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V7 ) @= 'S');  \r\n\t\t  CELLPUTS ( V8, pCubeName, V1, V2, V3, V4, V5, V6, V7 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 8 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3, V4, V5, V6, V7, V8 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V8 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V9 ), pCubeName, V1, V2, V3, V4, V5, V6, V7, V8 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V8 ) @= 'S');  \r\n\t\t  CELLPUTS ( V9, pCubeName, V1, V2, V3, V4, V5, V6, V7, V8 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 9 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3, V4, V5, V6, V7, V8, V9 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V9 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V10 ), pCubeName, V1, V2, V3, V4, V5, V6, V7, V8, V9 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V9 ) @= 'S');  \r\n\t\t  CELLPUTS ( V10, pCubeName, V1, V2, V3, V4, V5, V6, V7, V8, V9 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 10 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V10 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V11 ), pCubeName, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V10 ) @= 'S');  \r\n\t\t  CELLPUTS ( V11, pCubeName, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 11 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3, V5, V6, V7, V8, V9, V10, V11 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V11 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V12 ), pCubeName, V1, V2, V3, V5, V6, V7, V8, V9, V10, V11 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V11 ) @= 'S');  \r\n\t\t  CELLPUTS ( V12, pCubeName, V1, V2, V3, V5, V6, V7, V8, V9, V10, V11 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nELSEIF ( dimensionCount = 12 );\r\n   IF ( CellIsUpdateable ( pCubeName, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12 ) = 1 );\r\n\t   IF ( DTYPE ( lastDimension, V12 ) @= 'N');\r\n\t\t  CELLPUTN ( StringToNumber ( V13 ), pCubeName, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12 );\r\n\t   ELSEIF ( DTYPE ( lastDimension, V12 ) @= 'S');  \r\n\t\t  CELLPUTS ( V13, pCubeName, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12 );\r\n\t   ENDIF;\r\n   ENDIF;\r\nENDIF;",
+    "EpilogProcedure": "\r\n#****Begin: Generated Statements***\r\n#****End: Generated Statements****",
+    "DataSource": {
+        "Type": "ASCII",
+        "asciiDecimalSeparator": ".",
+        "asciiDelimiterChar": ",",
+        "asciiDelimiterType": "Character",
+        "asciiHeaderRecords": 0,
+        "asciiQuoteCharacter": "\"",
+        "asciiThousandSeparator": ",",
+        "dataSourceNameForClient": "D:\\ibm\\pa203if3\\samples\\tm1\\Empty\\Data\\plan_BudgetPlan.blb",
+        "dataSourceNameForServer": "D:\\ibm\\pa203if3\\samples\\tm1\\Empty\\Data\\plan_BudgetPlan.blb"
+    },
+    "Parameters": [
+        {
+            "Name": "pCubeName",
+            "Prompt": "",
+            "Value": "plan_BudgetPlan",
+            "Type": "String"
+        },
+        {
+            "Name": "pFileName",
+            "Prompt": "",
+            "Value": "D:\\ibm\\pa203if3\\samples\\tm1\\Empty\\Data\\plan_BudgetPlan.blb",
+            "Type": "String"
+        }
+    ],
+    "Variables": [
+        {
+            "Name": "V1",
+            "Type": "String",
+            "Position": 1,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V2",
+            "Type": "String",
+            "Position": 2,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V3",
+            "Type": "String",
+            "Position": 3,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V4",
+            "Type": "String",
+            "Position": 4,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V5",
+            "Type": "String",
+            "Position": 5,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V6",
+            "Type": "String",
+            "Position": 6,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V7",
+            "Type": "String",
+            "Position": 7,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V8",
+            "Type": "String",
+            "Position": 8,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V9",
+            "Type": "String",
+            "Position": 9,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V10",
+            "Type": "String",
+            "Position": 10,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V11",
+            "Type": "String",
+            "Position": 11,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V12",
+            "Type": "String",
+            "Position": 12,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V13",
+            "Type": "String",
+            "Position": 13,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V14",
+            "Type": "String",
+            "Position": 14,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V15",
+            "Type": "String",
+            "Position": 15,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V16",
+            "Type": "String",
+            "Position": 16,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V17",
+            "Type": "String",
+            "Position": 17,
+            "StartByte": 0,
+            "EndByte": 0
+        },
+        {
+            "Name": "V18",
+            "Type": "String",
+            "Position": 18,
+            "StartByte": 0,
+            "EndByte": 0
+        }
+    ],
+    "Attributes": {
+        "Caption": "_Import"
+    }
+}
