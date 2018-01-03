@@ -1,12 +1,16 @@
 package TM1Diagnostic.REST;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,10 +23,18 @@ import TM1Diagnostic.ProcessParameter;
 import TM1Diagnostic.ProcessVariable;
 import TM1Diagnostic.SearchResult;
 
-public class TM1Process extends TM1Object {
+public class TM1Process {
 
 	// "asciiDecimalSeparator":".","asciiDelimiterChar":",","asciiDelimiterType":"Character","asciiHeaderRecords":1,"asciiQuoteCharacter":"\"","asciiThousandSeparator":",","dataSourceNameForClient":".\\data_load\\budget_input\\Plan_Load_Budget_ascii.csv","dataSourceNameForServer":".\\data_load\\budget_input\\Plan_Load_Budget_ascii.csv"}}
 
+	public TM1Server tm1server;
+	public TM1Dimension dimension;
+	public TM1Hierarchy hierarchy;
+	public String name;
+	public String entity;
+	public String entitySet;
+	public OrderedJSONObject transferJSON;
+	
 	private String datasourcetype;
 	// Text type
 	private String asciiDecimalSeparator;
@@ -51,7 +63,21 @@ public class TM1Process extends TM1Object {
 	private List<ProcessVariable> variables;
 
 	public TM1Process(String name, TM1Server tm1server) {
-		super(name, TM1Object.PROCESS, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
+		this.entity = "Processes('" + name + "')";
+		parameters = new ArrayList<ProcessParameter>();
+		variables = new ArrayList<ProcessVariable>();
+	}
+	
+	public TM1Process(File importFile) throws JSONException, IOException {
+		FileReader fr = new FileReader(importFile);
+		BufferedReader br = new BufferedReader(fr);
+		OrderedJSONObject processJSON = new OrderedJSONObject(br);
+		br.close();
+		this.name = processJSON.getString("Name");
+		this.tm1server = tm1server;
+		this.entity = "Processes('" + name + "')";
 		parameters = new ArrayList<ProcessParameter>();
 		variables = new ArrayList<ProcessVariable>();
 	}
@@ -135,7 +161,7 @@ public class TM1Process extends TM1Object {
 	public OrderedJSONObject buildProcessJson(String newprocessname) throws JSONException {
 		OrderedJSONObject jp = new OrderedJSONObject();
 		if (newprocessname.equals("")) {
-			jp.put("Name", displayName);
+			jp.put("Name", name);
 		} else {
 			jp.put("Name", newprocessname);
 		}
@@ -215,7 +241,7 @@ public class TM1Process extends TM1Object {
 
 	public void updateOnServer(String processName) throws JSONException, ClientProtocolException, TM1RestException, URISyntaxException, IOException {
 		String request = entity;
-		OrderedJSONObject payload = buildProcessJson(displayName);
+		OrderedJSONObject payload = buildProcessJson(name);
 		tm1server.patch(request, payload);
 	}
 
@@ -469,6 +495,7 @@ public class TM1Process extends TM1Object {
 
 	}
 
+	/*
 	public List<SearchResult> findParentProcesses() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		List<SearchResult> dependantProcessList = new ArrayList<SearchResult>();
 		String request = entitySet;
@@ -476,7 +503,7 @@ public class TM1Process extends TM1Object {
 		tm1server.get(request, query);
 		OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
 		JSONArray JSONProcessArray = jresponse.getJSONArray("value");
-		String search = "ExecuteProcess('" + displayName.replaceAll(" ", "") + "')";
+		String search = "ExecuteProcess('" + name.replaceAll(" ", "") + "')";
 		int foundCount = 0;
 		for (int i = 0; i < JSONProcessArray.length(); i++) {
 			OrderedJSONObject processJSON = (OrderedJSONObject) JSONProcessArray.getJSONObject(i);
@@ -554,6 +581,7 @@ public class TM1Process extends TM1Object {
 		}
 		return dependantProcessList;
 	}
+	*/
 
 	public boolean writeProcessToFile(String dir) throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
 		String processDirName = dir + "//pro";
@@ -563,7 +591,7 @@ public class TM1Process extends TM1Object {
 		}
 		String request = entity;
 		tm1server.get(request);
-		FileWriter fw = new FileWriter(dir + "//pro//" + displayName + ".pro", false);
+		FileWriter fw = new FileWriter(dir + "//pro//" + name + ".pro", false);
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(tm1server.response.toString());
 		bw.close();
@@ -571,9 +599,42 @@ public class TM1Process extends TM1Object {
 		return true;
 	}
 	
+	public void fileExport(File exportFile) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+		String request = entity;
+		tm1server.get(request);
+		OrderedJSONObject response = new OrderedJSONObject(tm1server.response);
+
+		FileWriter fw = new FileWriter(exportFile);
+		BufferedWriter bw = new BufferedWriter(fw);
+		try {
+			bw.write(response.toString());
+		} catch (IOException e) {
+	        e.printStackTrace();
+	    } finally {
+	    	bw.close();
+	    	bw = null;
+	    }
+	}
+	
 	public OrderedJSONObject getExportJSON() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		tm1server.get(entity);
 		return new OrderedJSONObject(tm1server.response);
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof TM1Process)) {
+			return false;
+		}
+		TM1Process process = (TM1Process) o;
+		return process.name.equals(this.name);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name);
 	}
 
 }

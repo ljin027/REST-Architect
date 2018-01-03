@@ -10,20 +10,25 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.OrderedJSONObject;
 
-import TM1Diagnostic.TransferHierarchy;
-
-public class TM1Dimension extends TM1Object {
+public class TM1Dimension {
+	
+	public TM1Server tm1server;
+	public String name;
+	public String entity;
+	public String entitySet;
 
 	static public String NUMERIC = "Numeric";
 	static public String STRING = "Sting";
 	static public String CONSOLIDATED = "Consolidated";
 
+	public boolean expandedInExplorerTree;
 	public boolean heirarchiesExpandedInServerExplorer;
 	private OrderedJSONObject importJSON;
 
@@ -33,22 +38,27 @@ public class TM1Dimension extends TM1Object {
 	protected String unique_name;
 	
 	
-	public TM1Dimension(String name, OrderedJSONObject dimensionJSON, TM1Server tm1server) {
-		super(name, TM1Object.DIMENSION, tm1server);
-		this.importJSON = dimensionJSON;
-		heirarchies = new ArrayList<TM1Hierarchy>();
-		unique_name = "[" + displayName + "]";
+	public TM1Dimension(OrderedJSONObject importJSON) throws JSONException {
+		this.importJSON = importJSON;
+		this.name = importJSON.getString("Name");
+		this.entity = "Dimensions('" + name + "')";
+		this.heirarchies = new ArrayList<TM1Hierarchy>();
+		
+		expandedInExplorerTree = false;
 		heirarchiesExpandedInServerExplorer = false;
+
 	}
 
 	public TM1Dimension(String name, TM1Server tm1server) {
-		super(name, TM1Object.DIMENSION, tm1server);
-		heirarchies = new ArrayList<TM1Hierarchy>();
-		unique_name = "[" + displayName + "]";
+		this.name = name;
+		this.tm1server = tm1server;
+		this.entity = "Dimensions('" + name + "')";
+		this.heirarchies = new ArrayList<TM1Hierarchy>();
+		unique_name = "[" + name + "]";
 		heirarchiesExpandedInServerExplorer = false;
 	}
 	
-	public void createOnServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException{
+	/*public void createOnServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException{
 		String request = "Dimensions";
 		tm1server.post(request, importJSON);
 		for (int i=0; i<heirarchies.size(); i++){
@@ -57,8 +67,12 @@ public class TM1Dimension extends TM1Object {
 				hierarchy.createOnServer();
 			}
 		}
-	}
+	}*/
 
+	public TM1Server getServer() {
+		return tm1server;
+	}
+	
 	public int hierarchyCount() {
 		return heirarchies.size();
 	}
@@ -87,7 +101,7 @@ public class TM1Dimension extends TM1Object {
 		}
 		for (int i = 0; i < heirarchies.size(); i++) {
 			TM1Hierarchy hierarchy = heirarchies.get(i);
-			if (!jheirarchies.toString().contains("\"Name\":\"" + hierarchy.displayName + "\"")) {
+			if (!jheirarchies.toString().contains("\"Name\":\"" + hierarchy.name + "\"")) {
 				heirarchies.remove(i);
 			}
 		}
@@ -124,7 +138,7 @@ public class TM1Dimension extends TM1Object {
 		return cubes;
 	}
 
-	public OrderedJSONObject build_json_for_import(String import_name) throws JSONException {
+	/*public OrderedJSONObject build_json_for_import(String import_name) throws JSONException {
 		String oldname = json.getString("Name");
 		json.put("@odata.context", "$metadata#Dimensions/$entity");
 		json.put("Name", import_name);
@@ -225,52 +239,30 @@ public class TM1Dimension extends TM1Object {
 		}
 		return jcomponents;
 	}
+	*/
 
-	public boolean writeDimensionToFile(String directory) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
-		// dimension
-		String dimensionsDirString = directory + "//dim";
-		File dimensionsDir = new File(dimensionsDirString);
-		if (!dimensionsDir.exists()){
-			dimensionsDir.mkdir();
-		}
-		
+	public void fileExport(File exportFile) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		String request = entity;
 		tm1server.get(request);
 		OrderedJSONObject response = new OrderedJSONObject(tm1server.response);
+		OrderedJSONObject exportJSON = new OrderedJSONObject();
+		exportJSON.put("Name", response.getString("Name"));
 
-		FileWriter fw = new FileWriter(dimensionsDirString + "//" + displayName + ".dim", false);
+		FileWriter fw = new FileWriter(exportFile);
 		BufferedWriter bw = new BufferedWriter(fw);
 		try {
-			bw.write(response.toString());
+			bw.write(exportJSON.toString());
 		} catch (IOException e) {
 	        e.printStackTrace();
 	    } finally {
 	    	bw.close();
 	    	bw = null;
 	    }
-		
-		readHierarchiesFromServer();
-		
-		File dimensionDir = new File(dimensionsDirString + "//" + displayName);
-		if (!dimensionDir.exists()){
-			dimensionDir.mkdir();
-		}
-		
-		for (int i=0; i<hierarchyCount(); i++){
-			TM1Hierarchy hierarchy = this.getHeirarchy(i);
-			hierarchy.writeHierarchyToFile(dimensionsDirString + "//" + displayName);
-		}
-		return true;
-	}
-
-	public void set_transfer_json() throws ClientProtocolException, JSONException, TM1RestException, URISyntaxException, IOException {
-		transferJson = build_object_json(name);
-		transferJson.put("@odata.context", "@odata.context").equals("$metadata#Dimensions/$entity");
 	}
 
 	public boolean checkServerForElementSecurity() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
 		try {
-			String request = "Cubes('}ElementSecurity_" + displayName + "')";
+			String request = "Cubes('}ElementSecurity_" + name + "')";
 			tm1server.get(request);
 			return true;
 		} catch (TM1RestException ex){
@@ -282,38 +274,41 @@ public class TM1Dimension extends TM1Object {
 	}
 
 	public TM1Dimension getElementSecurityDimension() {
-		String securityDimensionName = "}ElementSecurity_" + displayName;
+		String securityDimensionName = "}ElementSecurity_" + name;
 		TM1Dimension elementSecurityDimension = new TM1Dimension(securityDimensionName, tm1server);
 		return elementSecurityDimension;
 	}
 
 	public TM1Cube getElementSecurityCube() {
-		String securityCubeName = "}ElementSecurity_" + displayName;
+		String securityCubeName = "}ElementSecurity_" + name;
 		TM1Cube elementSecurityCube = new TM1Cube(securityCubeName, tm1server);
 		return elementSecurityCube;
 	}
 
 	public boolean checkServerForElementAttributes() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
 		try {
-			String request = "Cubes('}ElementAttributes_" + displayName + "')";
+			System.out.println("Checking for }ElementAttributes_" + name);
+			String request = "Cubes('}ElementAttributes_" + name + "')";
 			tm1server.get(request);
+			System.out.println("OK");
 			return true;
-		} catch (TM1RestException ex){
-			if (((TM1RestException)ex).getErrorCode() == 404) {
-				return false;
-			}
-			throw ex;
+		} catch (Exception ex){
+			ex.printStackTrace();
+			//throw ex;
+		} finally {
+			System.out.println("NO");
+			return false;
 		}
 	}
 
 	public TM1Dimension getElementAttributeDimension() {
-		String attributeDimensionName = "}ElementAttributes_" + displayName;
+		String attributeDimensionName = "}ElementAttributes_" + name;
 		TM1Dimension elementAttributeDimension = new TM1Dimension(attributeDimensionName, tm1server);
 		return elementAttributeDimension;
 	}
 
 	public TM1Cube getElementAttributeCube() {
-		String attributeCubeName = "}ElementAttributes_" + displayName;
+		String attributeCubeName = "}ElementAttributes_" + name;
 		TM1Cube elementAttributeCube = new TM1Cube(attributeCubeName, tm1server);
 		return elementAttributeCube;
 	}
@@ -321,7 +316,7 @@ public class TM1Dimension extends TM1Object {
 	public TM1Hierarchy getDefaultHierarchy() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException, JSONException {
 		this.readHierarchiesFromServer();
 		for (int i = 0; i < heirarchies.size(); i++) {
-			if (heirarchies.get(i).displayName.equals(displayName)) {
+			if (heirarchies.get(i).name.equals(name)) {
 				return heirarchies.get(i);
 			}
 		}
@@ -336,5 +331,21 @@ public class TM1Dimension extends TM1Object {
 		String request = entity + "/Hierarchies('" + hierarchyName + "')";
 		tm1server.get(request);
 		return true;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof TM1Dimension)) {
+			return false;
+		}
+		TM1Dimension dimension = (TM1Dimension) o;
+		return dimension.name.equals(this.name);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name);
 	}
 }

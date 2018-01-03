@@ -67,7 +67,7 @@ public class BlobEditor {
 		tm1server = blob.getServer();
 		shell = new Shell(parent, SWT.RESIZE | SWT.MAX | SWT.MIN);
 		//shell.setSize(689, 448);
-		shell.setText("Blob Editor - " + blob.displayName);
+		shell.setText("Blob Editor - " + blob.name);
 		shell.setLayout(new GridLayout(1, false));
 		display = shell.getDisplay();
 		createContents();

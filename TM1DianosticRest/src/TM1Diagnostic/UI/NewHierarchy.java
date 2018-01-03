@@ -39,7 +39,7 @@ public class NewHierarchy extends Dialog {
 	public NewHierarchy(Shell parent, TM1Dimension dimension) {
 		super(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
 		this.dimension = dimension;
-		this.tm1server = dimension.getServer();
+		this.tm1server = dimension.tm1server;
 		result = false;
 	}
 
@@ -114,7 +114,7 @@ public class NewHierarchy extends Dialog {
 		try {
 			result = true;
 			name = newObjectNameText.getText();
-			String request = dimension.getEntity() + "/Hierarchies";
+			String request = dimension.entity + "/Hierarchies";
 			OrderedJSONObject payload = new OrderedJSONObject();
 			payload.put("Name", name);
 			payload.put("UniqueName", "[" + name + "]");

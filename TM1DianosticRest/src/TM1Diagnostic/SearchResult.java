@@ -2,15 +2,13 @@ package TM1Diagnostic;
 
 import java.util.Objects;
 
-import TM1Diagnostic.REST.TM1Object;
-
 public class SearchResult {
 	
-	public TM1Object tm1object;
+	public Object tm1object;
 	//public int lineNumber;
 	public String details;
 	
-	public SearchResult(TM1Object tm1object, String details){
+	public SearchResult(Object tm1object, String details){
 		this.tm1object = tm1object;
 		//this.lineNumber = lineNumber;
 		this.details = details;
@@ -32,6 +30,6 @@ public class SearchResult {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(tm1object.displayName + details);
+		return Objects.hash(tm1object + details);
 	}
 }

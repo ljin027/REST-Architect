@@ -169,7 +169,7 @@ public class SecurityReport {
 		tblclmnNewColumn_1.setText("Element");
 
 		if (cube != null) {
-			cubesCombo.setText(cube.displayName);
+			cubesCombo.setText(cube.name);
 			readDimensions();
 		} else {
 			cubesCombo.select(0);
@@ -266,7 +266,7 @@ public class SecurityReport {
 					t.setText(1, elementNames[i]);
 				} else {
 					TM1Element element = hierarchy.getDefaultElement();
-					t.setText(1, element.displayName);
+					t.setText(1, element.name);
 				}
 			}
 			resizeColumns();

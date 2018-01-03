@@ -7,13 +7,25 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.OrderedJSONObject;
 
-public class TM1Blob extends TM1Object {
+public class TM1Blob {
 
-	// private String content;
+	public TM1Server tm1server;
+	public String name;
+	public String entity;
+	public String entitySet;
+	
 	private byte[] bytes;
 
 	public TM1Blob(String name, TM1Server tm1server) {
-		super(name, TM1Object.BLOB, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
+		
+		entity = "Contents('Blobs')/Contents('" + name + "')";
+		entitySet = "Contents('Blobs')/Contents";
+	}
+	
+	public TM1Server getServer(){
+		return tm1server;
 	}
 
 	public String getContent() {
@@ -55,7 +67,7 @@ public class TM1Blob extends TM1Object {
 	}
 
 	public void writeToServerAs(String blobName) throws JSONException, ClientProtocolException, TM1RestException, URISyntaxException, IOException {
-		String request = entitySet;
+		String request = "Blobs";
 		OrderedJSONObject payload = new OrderedJSONObject();
 		//payload.put("@odata.context", ../$metadata#Contents('Blobs')/Contents/$entity);
 		payload.put("@odata.type", "#ibm.tm1.api.v1.Document"); 
@@ -63,7 +75,7 @@ public class TM1Blob extends TM1Object {
 		payload.put("ID", blobName);
 		//System.out.println("Write as " + payload.toString());
 		tm1server.post(request, payload);
-		request = entitySet + "('" + blobName + "')/Content";
+		request = "Blobs('" + blobName + "')/Content";
 		String content = new String(bytes);
 		//System.out.println("Write " + payload);
 		tm1server.patch(request, content);

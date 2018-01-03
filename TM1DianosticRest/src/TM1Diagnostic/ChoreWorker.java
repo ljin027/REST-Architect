@@ -30,14 +30,14 @@ public class ChoreWorker extends Thread {
 				@Override
 				public void run() {
 					if (notify){
-						parentUI.infoMessage("Chore '" + chore.displayName + "'" + " completed succesfully");
+						parentUI.infoMessage("Chore '" + chore.name + "'" + " completed succesfully");
 					} 
 				}
 			});
 		} catch (TM1RestException | URISyntaxException | IOException e) {
 			// TODO Auto-generated catch block
 			if (notify){
-				parentUI.infoMessage("Chore '" + chore.displayName + "'" + " failed");
+				parentUI.infoMessage("Chore '" + chore.name + "'" + " failed");
 			} 
 			e.printStackTrace();
 		}

@@ -100,10 +100,10 @@ public class ChoreEditor {
 	 */
 	public ChoreEditor(Shell parent, TM1Chore chore) {
 		this.chore = chore;
-		tm1server = chore.getServer();
+		tm1server = chore.tm1server;
 		shell = new Shell(parent, SWT.RESIZE | SWT.MAX | SWT.MIN);
 		//shell.setSize(689, 448);
-		shell.setText("Chore Editor - " + chore.displayName);
+		shell.setText("Chore Editor - " + chore.name);
 		newChore = false;
 		shell.setLayout(new GridLayout(1, false));
 		display = shell.getDisplay();
@@ -550,7 +550,7 @@ public class ChoreEditor {
 			for (int i = 0; i < chore.choreTaskCount(); i++) {
 				TableItem t = new TableItem(choreProcessTable, SWT.NONE);
 				ChoreTask task = chore.getChoreTask(i);
-				t.setText(task.getProcess().displayName);
+				t.setText(task.getProcess().name);
 				t.setData(task);
 			}
 		} catch (Exception ex) {

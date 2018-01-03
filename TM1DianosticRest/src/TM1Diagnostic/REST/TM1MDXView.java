@@ -13,8 +13,17 @@ import org.apache.wink.json4j.JSONArray;
 import TM1Diagnostic.CubeViewerPosition;
 import TM1Diagnostic.TM1ViewMember;
 
-public class TM1MDXView extends TM1Object {
+public class TM1MDXView {
 
+	
+	public TM1Server tm1server;
+	public TM1Dimension dimension;
+	public TM1Hierarchy hierarchy;
+	public String name;
+	public String entity;
+	public String entitySet;
+	public OrderedJSONObject transferJSON;
+	
 	static public int ROW = 0;
 	static public int COLUMN = 1;
 	static public int FILTER = 2;
@@ -31,7 +40,8 @@ public class TM1MDXView extends TM1Object {
 	private List<CubeViewerPosition> dimensionPositions;
 
 	public TM1MDXView (String name, TM1Server tm1server){
-		super (name, TM1Object.MDXVIEW, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
 		cells = new ArrayList<TM1Cell>();
 		axes = new ArrayList<TM1ViewAxes>();
 
@@ -160,7 +170,7 @@ public class TM1MDXView extends TM1Object {
 			boolean annotated = jcell.getBoolean("Annotated");
 			boolean consolidated= jcell.getBoolean("Consolidated");
 
-			TM1Cell cell = new TM1Cell(i, type, status, value, formattedvalue, formatstring, updateable, rulederived, annotated, consolidated);
+			TM1Cell cell = new TM1Cell(i, 0, status, value, formattedvalue, formatstring, updateable, rulederived, annotated, consolidated);
 			cells.add(cell);
 		}
 	}

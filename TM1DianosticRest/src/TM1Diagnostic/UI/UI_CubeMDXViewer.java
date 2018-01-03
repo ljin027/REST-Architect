@@ -40,7 +40,6 @@ import TM1Diagnostic.REST.TM1Dimension;
 import TM1Diagnostic.REST.TM1Element;
 import TM1Diagnostic.REST.TM1Hierarchy;
 import TM1Diagnostic.REST.TM1MDXView;
-import TM1Diagnostic.REST.TM1Object;
 import TM1Diagnostic.REST.TM1RestException;
 import TM1Diagnostic.REST.TM1Subset;
 import TM1Diagnostic.REST.TM1View;
@@ -105,7 +104,7 @@ public class UI_CubeMDXViewer extends Dialog {
 	public UI_CubeMDXViewer(Shell parent, TM1Cube cube) {
 		super(parent, SWT.DIALOG_TRIM);
 		this.cube = cube;
-		mdxview = new TM1MDXView(cube.displayName, cube.getServer());
+		mdxview = new TM1MDXView(cube.name, cube.getServer());
 
 	}
 
@@ -336,13 +335,13 @@ public class UI_CubeMDXViewer extends Dialog {
 		dimension = cube.getDimension(0);
 		hierarchy = dimension.getDefaultHierarchy();
 
-		String column = "[" + dimension.displayName + "].members ON COLUMNS, \n";
+		String column = "[" + dimension.name + "].members ON COLUMNS, \n";
 		mdx = mdx.concat(column);
 
 		dimension = cube.getDimension(1);
 		hierarchy = dimension.getDefaultHierarchy();
 
-		String row = "[" + dimension.displayName + "].members ON ROWS \nFROM [" + cube.displayName + "] \n";
+		String row = "[" + dimension.name + "].members ON ROWS \nFROM [" + cube.name + "] \n";
 		mdx = mdx.concat(row);
 
 		if (dimcount > 2){
@@ -353,7 +352,7 @@ public class UI_CubeMDXViewer extends Dialog {
 				TM1Element defaultElement;
 				if (hierarchy.readDefaultElementFromServer()){
 					defaultElement = hierarchy.getDefaultElement();
-					String filter = "[" + dimension.displayName + "].[" + defaultElement.displayName + "]";
+					String filter = "[" + dimension.name + "].[" + defaultElement.name + "]";
 					String postFilter = " )";
 					if (i != dimcount - 1){
 						postFilter = ", \n";
@@ -395,14 +394,14 @@ public class UI_CubeMDXViewer extends Dialog {
 		TM1ViewAxes rowsaxes = mdxview.getrowaxes();
 		for (int i = 0; i < rowheadercount; i++) {
 			String colheader = columnsaxes.tuples.get(column - columnheadercount).members.get(i).name;
-			intersections = intersections.concat(mdxview.getcolumn(i).dimension.displayName + ":" + colheader + "\n");
+			intersections = intersections.concat(mdxview.getcolumn(i).dimension.name + ":" + colheader + "\n");
 		}
 		for (int i = 0; i < columnheadercount; i++) {
 			String rowheader = rowsaxes.tuples.get(row - rowheadercount).members.get(i).name;
-			intersections = intersections.concat(mdxview.getrow(i).dimension.displayName + ":" + rowheader + "\n");
+			intersections = intersections.concat(mdxview.getrow(i).dimension.name + ":" + rowheader + "\n");
 		}
 		for (int i = 0; i < mdxview.getfilterscount(); i++) {
-			intersections = intersections.concat(mdxview.getfilter(i).dimension.displayName + ":" + mdxview.getfilter(i).element.displayName + "\n");
+			intersections = intersections.concat(mdxview.getfilter(i).dimension.name + ":" + mdxview.getfilter(i).element.name + "\n");
 		}
 		message_box(intersections, SWT.NONE);
 	}

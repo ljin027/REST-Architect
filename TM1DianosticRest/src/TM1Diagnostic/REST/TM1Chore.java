@@ -1,12 +1,16 @@
 package TM1Diagnostic.REST;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.wink.json4j.JSONException;
@@ -16,7 +20,15 @@ import org.apache.wink.json4j.JSONArray;
 import TM1Diagnostic.ChoreTask;
 import TM1Diagnostic.ProcessParameter;
 
-public class TM1Chore extends TM1Object {
+public class TM1Chore {
+	
+	public TM1Server tm1server;
+	public TM1Dimension dimension;
+	public TM1Hierarchy hierarchy;
+	public String name;
+	public String entity;
+	public String entitySet;
+	public OrderedJSONObject transferJSON;
 
 	public String startDateTime;
 	public boolean dstSensitive;
@@ -26,7 +38,20 @@ public class TM1Chore extends TM1Object {
 	public List<ChoreTask> choreTasks;
 
 	public TM1Chore(String name, TM1Server tm1server) {
-		super(name, TM1Object.CHORE, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
+		this.entity = "Chores('" + name + "')";
+		choreTasks = new ArrayList<ChoreTask>();
+	}
+	
+	public TM1Chore(File importFile) throws JSONException, IOException {
+		FileReader fr = new FileReader(importFile);
+		BufferedReader br = new BufferedReader(fr);
+		OrderedJSONObject choreJSON = new OrderedJSONObject(br);
+		br.close();
+		this.name = choreJSON.getString("Name");
+		this.tm1server = tm1server;
+		this.entity = "Chores('" + name + "')";
 		choreTasks = new ArrayList<ChoreTask>();
 	}
 
@@ -191,7 +216,7 @@ public class TM1Chore extends TM1Object {
 		}
 		String request = entity;
 		tm1server.get(request);
-		FileWriter fw = new FileWriter(dir + "//cho//" + displayName + ".cho", false);
+		FileWriter fw = new FileWriter(dir + "//cho//" + name + ".cho", false);
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(tm1server.response.toString());
 		bw.close();
@@ -199,9 +224,42 @@ public class TM1Chore extends TM1Object {
 		return true;
 	}
 	
+	public void fileExport(File exportFile) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+		String request = entity;
+		tm1server.get(request);
+		OrderedJSONObject response = new OrderedJSONObject(tm1server.response);
+
+		FileWriter fw = new FileWriter(exportFile);
+		BufferedWriter bw = new BufferedWriter(fw);
+		try {
+			bw.write(response.toString());
+		} catch (IOException e) {
+	        e.printStackTrace();
+	    } finally {
+	    	bw.close();
+	    	bw = null;
+	    }
+	}
+	
 	public OrderedJSONObject getExportJSON() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		tm1server.get(entity);
 		return new OrderedJSONObject(tm1server.response);
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof TM1Chore)) {
+			return false;
+		}
+		TM1Chore chore = (TM1Chore) o;
+		return chore.name.equals(this.name);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name);
 	}
 
 }

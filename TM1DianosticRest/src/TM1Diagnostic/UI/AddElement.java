@@ -83,7 +83,7 @@ public class AddElement extends Dialog {
 		dimensionText = new Text(composite, SWT.BORDER);
 		dimensionText.setEditable(false);
 		dimensionText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-		dimensionText.setText(hierarchy.getParent().displayName + ":" + hierarchy.displayName);
+		dimensionText.setText(hierarchy.dimension.name + ":" + hierarchy.name);
 		
 		Composite composite_1 = new Composite(composite, SWT.NONE);
 		composite_1.setLayout(new GridLayout(1, false));
@@ -113,7 +113,7 @@ public class AddElement extends Dialog {
 		if (parentElement == null){
 			parentElementText.setText("<root>");
 		} else {
-			parentElementText.setText(parentElement.displayName);
+			parentElementText.setText(parentElement.name);
 		}
 		
 		Label lblNewLabel_2 = new Label(composite, SWT.NONE);
@@ -212,24 +212,24 @@ public class AddElement extends Dialog {
 	private void addElementsToHierarchy() {
 		try {
 			if (parentElementText.getText().equals("<root>")) {
-				String request = dimension.getEntity() + '/' + hierarchy.getEntity() + "/tm1.SetElement";
+				String request = dimension.entity + '/' + hierarchy.entity + "/tm1.SetElement";
 				for (int i = 0; i < table.getItemCount(); i++) {
 					TableItem t = table.getItem(i);
 					OrderedJSONObject payload = new OrderedJSONObject();
 					OrderedJSONObject newElementJSON = new OrderedJSONObject();
 					newElementJSON.put("Name", t.getText(0));
 					newElementJSON.put("Type", t.getText(1));
-					TM1Server tm1server = hierarchy.getServer();
+					TM1Server tm1server = hierarchy.tm1server;
 					payload.put("Element", newElementJSON);
 					if (beforeElement != null) {
-						payload.put("Before@odata.bind", dimension.getEntity() + '/' + hierarchy.getEntity() + '/' + beforeElement.getEntity());
+						payload.put("Before@odata.bind", dimension.entity + '/' + hierarchy.entity + '/' + beforeElement.entity);
 					}
 					//System.out.println("SetElement Payload " + payload);
 					tm1server.post(request, payload);
 					refreshOnClose = true;
 				}
 			} else {
-				String request = dimension.getEntity() + '/' + hierarchy.getEntity() + '/' + parentElement.getEntity() + "/tm1.SetComponent";
+				String request = dimension.entity + '/' + hierarchy.entity + '/' + parentElement.entity + "/tm1.SetComponent";
 				for (int i = 0; i < table.getItemCount(); i++) {
 					TableItem t = table.getItem(i);
 					OrderedJSONObject payload = new OrderedJSONObject();
@@ -237,10 +237,10 @@ public class AddElement extends Dialog {
 					newElementJSON.put("Name", t.getText(0));
 					newElementJSON.put("Type", t.getText(1));
 					// newElementJSON.put("Weight", t.getText(2));
-					TM1Server tm1server = hierarchy.getServer();
+					TM1Server tm1server = hierarchy.tm1server;
 					payload.put("Element", newElementJSON);
 					if (beforeElement != null) {
-						payload.put("Before@odata.bind", dimension.getEntity() + '/' + hierarchy.getEntity() + '/' + beforeElement.getEntity());
+						payload.put("Before@odata.bind", dimension.entity + '/' + hierarchy.entity + '/' + beforeElement.entity);
 					}
 					//System.out.println("SetComponent Payload " + payload);
 					tm1server.post(request, payload);

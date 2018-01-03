@@ -34,7 +34,6 @@ import TM1Diagnostic.REST.TM1Chore;
 import TM1Diagnostic.REST.TM1Cube;
 import TM1Diagnostic.REST.TM1Dimension;
 import TM1Diagnostic.REST.TM1Hierarchy;
-import TM1Diagnostic.REST.TM1Object;
 import TM1Diagnostic.REST.TM1Process;
 import TM1Diagnostic.REST.TM1RestException;
 import TM1Diagnostic.REST.TM1Server;
@@ -294,12 +293,6 @@ public class UI_SearchResult extends Dialog {
 
 	private void clickGoTo() throws ClientProtocolException, URISyntaxException, IOException, JSONException {
 		TableItem t = searchResultTable.getSelection()[0];
-		try {
-			parentComposite.goTo((TM1Object)t.getData());
-		} catch (TM1RestException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	public void updateSearchResults(List<SearchResult> results) {
@@ -315,37 +308,38 @@ public class UI_SearchResult extends Dialog {
 		}
 		for (int i = 0; i < results.size(); i++) {
 			SearchResult result = results.get(i);
-			TM1Object o = result.tm1object;
+			Object o = result.tm1object;
 			TableItem t = new TableItem(searchResultTable, SWT.NONE);
-			if (o instanceof TM1Cube) {
+			/*if (o instanceof TM1Cube) {
 				t.setText(0, "Cube");
-				t.setText(1, o.displayName);
+				t.setText(1, o.name);
 				t.setText(2, result.details);
 			} else if (o instanceof TM1View) {
 				t.setText(0, "View");
-				t.setText(1, o.displayName);
+				t.setText(1, o.name);
 				t.setText(2, result.details);
 			} else if (o instanceof TM1Dimension) {
 				t.setText(0, "Dimension");
-				t.setText(1, o.displayName);
+				t.setText(1, o.name);
 				t.setText(2, result.details);
 			} else if (o instanceof TM1Hierarchy) {
 				t.setText(0, "Hierarchy");
-				t.setText(1, o.displayName);
+				t.setText(1, o.name);
 				t.setText(2, result.details);
 			} else if (o instanceof TM1Subset) {
 				t.setText(0, "Subset");
-				t.setText(1, o.displayName);
+				t.setText(1, o.name);
 				t.setText(2, result.details);
 			} else if (o instanceof TM1Process) {
 				t.setText(0, "Process");
-				t.setText(1, o.displayName);
+				t.setText(1, o.name);
 				t.setText(2, result.details);
 			} else if (o instanceof TM1Chore) {
 				t.setText(0, "Chore");
-				t.setText(1, o.displayName);
+				t.setText(1, o.name);
 				t.setText(2, result.details);
 			}
+			*/
 			t.setData(o);
 		}
 		for (TableColumn tc : searchResultTable.getColumns()) tc.pack();
@@ -353,14 +347,7 @@ public class UI_SearchResult extends Dialog {
 
 
 	private void runSearch() throws TM1RestException {
-		try {
-			String searchTerm = searchTermText.getText();
-			results = tm1server.search(searchTerm, controlObjectCheckButton.getSelection(), regexCheckButton.getSelection());
-			updateResultsTable();
-		} catch (JSONException | URISyntaxException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 	}
 
 	

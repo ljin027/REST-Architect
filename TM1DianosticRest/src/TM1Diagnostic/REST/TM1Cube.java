@@ -3,6 +3,7 @@ package TM1Diagnostic.REST;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,14 +27,18 @@ import com.fasterxml.jackson.core.*;
 //import com.ibm.xtq.ast.parsers.xpath.Test;
 
 import TM1Diagnostic.SearchResult;
-import TM1Diagnostic.TransferView;
 
 //import org.json.JSONObject;
 
-public class TM1Cube extends TM1Object {
+public class TM1Cube {
 
 	static public int PUBLIC = 0;
 	static public int PRIVATE = 1;
+	
+	public TM1Server tm1server;
+	public String name;
+	public String entity;
+	public String entitySet;
 
 	private List<TM1View> views;
 	private List<TM1View> privateViews;
@@ -41,18 +47,55 @@ public class TM1Cube extends TM1Object {
 	private List<TM1Dimension> import_dimensions;
 	private String rules;
 
+	public boolean expandedInExplorerTree;
 	public boolean dimensionsExpandedInServerExplorer;
 	public boolean viewsExpandedInServerExplorer;
 
 	public TM1Cube(String name, TM1Server tm1server) {
-		super(name, TM1Object.CUBE, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
+		this.entity = "Cubes('" + name +"')";
 		views = new ArrayList<TM1View>();
 		privateViews = new ArrayList<TM1View>();
 		dimensions = new ArrayList<TM1Dimension>();
 		rules = "";
 
+		expandedInExplorerTree = false;
 		dimensionsExpandedInServerExplorer = false;
 		viewsExpandedInServerExplorer = false;
+	}
+	
+	public TM1Cube(File importFile) throws JSONException, IOException {
+		
+		String cubeName = importFile.getName().substring(0, importFile.getName().lastIndexOf('.'));
+		FileReader fr = new FileReader(importFile);
+		BufferedReader br = new BufferedReader(fr);
+		OrderedJSONObject cubeJSON = new OrderedJSONObject(br);
+		File dataFile = new File(importFile.getAbsolutePath().replace(".cube", ".data"));
+		if (dataFile.exists()){
+			System.out.println("Found data file: " + dataFile.getAbsolutePath());		
+			//importFile.readImportData(dataFile);				
+		}
+		br.close();
+		
+		this.name = cubeJSON.getString("Name");
+		this.entity = "Cubes('" + name +"')";
+		views = new ArrayList<TM1View>();
+		privateViews = new ArrayList<TM1View>();
+		dimensions = new ArrayList<TM1Dimension>();
+		rules = "";
+
+		expandedInExplorerTree = false;
+		dimensionsExpandedInServerExplorer = false;
+		viewsExpandedInServerExplorer = false;
+	}
+	
+	public TM1Server getServer() {
+		return tm1server;
+	}
+	
+	public String getEntity() {
+		return entity;
 	}
 
 	public void clearDimensions() {
@@ -89,29 +132,8 @@ public class TM1Cube extends TM1Object {
 		}
 	}
 
-	public OrderedJSONObject buildJsonForImport(String newname) {
-		OrderedJSONObject jcube = new OrderedJSONObject();
-		try {
-			jcube.put("Name", newname);
-			String rules = json.getString("Rules");
-			JSONArray jimport_dimensions = new JSONArray();
-			for (int i = 0; i < dimensions.size(); i++) {
-				String dimname = dimensions.get(i).displayName;
-				String importname = import_dimensions.get(i).get_update_name();
-				jimport_dimensions.put("Dimensions('" + importname + "')");
-				rules = rules.replaceAll("!" + dimname, "!" + importname);
-				rules = rules.replaceAll(dimname + ":", importname + ":");
-			}
-			jcube.put("Rules", rules);
-			jcube.put("Dimensions@odata.bind", jimport_dimensions);
-		} catch (Exception ex) {
-
-		}
-		return jcube;
-	}
-
 	public boolean checkServerForCellSecurity() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
-		String req = "Cubes('}CellSecurity_" + displayName + "')";
+		String req = "Cubes('}CellSecurity_" + name + "')";
 		try {
 		tm1server.get(req); 
 		} catch (TM1RestException ex){
@@ -125,7 +147,7 @@ public class TM1Cube extends TM1Object {
 	}
 
 	public TM1Cube getCellSecurityCube(){
-		TM1Cube cellSecurityCube = new TM1Cube("}CellSecurity_" + displayName, tm1server); 
+		TM1Cube cellSecurityCube = new TM1Cube("}CellSecurity_" + name, tm1server); 
 		return cellSecurityCube;
 	}
 
@@ -148,7 +170,7 @@ public class TM1Cube extends TM1Object {
 			}
 			for (int i = 0; i < views.size(); i++) {
 				TM1View view = views.get(i);
-				if (!jViews.toString().contains("\"Name\":\"" + view.displayName + "\"")) {
+				if (!jViews.toString().contains("\"Name\":\"" + view.name + "\"")) {
 					views.remove(i);
 				}
 			}
@@ -163,7 +185,7 @@ public class TM1Cube extends TM1Object {
 			}
 			for (int i = 0; i < privateViews.size(); i++) {
 				TM1View privateView = privateViews.get(i);
-				if (!jPrivateViews.toString().contains("\"Name\":\"" + privateView.displayName + "\"")) {
+				if (!jPrivateViews.toString().contains("\"Name\":\"" + privateView.name + "\"")) {
 					privateViews.remove(i);
 				}
 			}
@@ -173,7 +195,6 @@ public class TM1Cube extends TM1Object {
 		}
 		return true;
 	}
-
 
 	public boolean readRulesFromServer() throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
 		String req = entity + "/Rules";
@@ -215,12 +236,10 @@ public class TM1Cube extends TM1Object {
 		}
 		for (int i = 0; i < dimensions.size(); i++) {
 			TM1Dimension dimension = dimensions.get(i);
-			if (!jDimensions.toString().contains("\"Name\":\"" + dimension.displayName + "\"")) {
+			if (!jDimensions.toString().contains("\"Name\":\"" + dimension.name + "\"")) {
 				dimensions.remove(i);
 			}
 		}
-
-
 	}
 
 	public boolean checkServerForRules() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException {
@@ -336,6 +355,7 @@ public class TM1Cube extends TM1Object {
 		tm1server.post(request, jNewViewOrdered);
 	}
 
+	/*
 	public List<SearchResult> getRuleSourceCubesList() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		List<SearchResult> cubeRuleReferenceList = new ArrayList<SearchResult>();
 		//System.out.println("Finding source cubes");
@@ -403,14 +423,17 @@ public class TM1Cube extends TM1Object {
 			return cubeRuleReferenceList;
 		}
 	}
+	*/
 	
-	public void createOnServer(TM1Server server) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException{
+	/*
+	 * public void createOnServer(TM1Server server) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException{
 		String request = "Cubes";
 		server.post(request, this.json);
 		for (int i=0; i<views.size(); i++){
 			//TM1View view = views.get(i);
 		}
 	}
+	*/
 	
 	public OrderedJSONObject getExportJSON() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		tm1server.get(entity);
@@ -432,10 +455,10 @@ public class TM1Cube extends TM1Object {
 		for (int i=0; i<dimensions.size(); i++) {
 			System.out.println("Adding dim: " + i);
 			TM1Dimension dimension = dimensions.get(i);
-			dimensionJSONArrayExport.add(dimension.getEntity());
+			dimensionJSONArrayExport.add(dimension.entity);
 		}
 		exportJSON.put("Dimensions@odata.bind", dimensionJSONArrayExport);
-		FileWriter fw = new FileWriter(cubeDir + "//" + displayName + ".cube", false);
+		FileWriter fw = new FileWriter(cubeDir + "//" + name + ".cube", false);
 		BufferedWriter bw = new BufferedWriter(fw);
 		try {
 			bw.write(exportJSON.toString());
@@ -454,7 +477,7 @@ public class TM1Cube extends TM1Object {
 		this.readCubeDimensionsFromServer();
 		for (int i=0; i<this.dimensionCount(); i++){
 			TM1Dimension dimension = this.getDimension(i);
-			dimension.writeDimensionToFile(dir);
+			//dimension.writeDimensionToFile(dir);
 		}
 		
 		FileReader fileReader = new FileReader(".//data/_exportDataTi");
@@ -488,7 +511,7 @@ public class TM1Cube extends TM1Object {
 		JSONArray exportProcessParameterArray = new JSONArray();
 		OrderedJSONObject p1 = new OrderedJSONObject();
 		p1.put("Name", "pCubeName");
-		p1.put("Value", displayName);
+		p1.put("Value", name);
 		OrderedJSONObject p2 = new OrderedJSONObject();
 		p2.put("Name", "pFileName");
 		p2.put("Value", exportFileName);
@@ -499,7 +522,7 @@ public class TM1Cube extends TM1Object {
 		
 		// Read the blb file from server to client
 		tm1server.get("Contents('Blobs')/Contents('" + uniqueID + "')/Content");
-		FileWriter fw2 = new FileWriter(cubeDir + "//" + displayName + ".data", false);
+		FileWriter fw2 = new FileWriter(cubeDir + "//" + name + ".data", false);
 		BufferedWriter bw2 = new BufferedWriter(fw2);
 		String blbResponse = tm1server.response;
 		try {
@@ -515,6 +538,23 @@ public class TM1Cube extends TM1Object {
 		tm1server.delete(processEntity);
 		
 		return true;
+	}
+	
+	public void fileExport(File exportFile) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+		String request = entity;
+		tm1server.get(request);
+		OrderedJSONObject response = new OrderedJSONObject(tm1server.response);
+
+		FileWriter fw = new FileWriter(exportFile);
+		BufferedWriter bw = new BufferedWriter(fw);
+		try {
+			bw.write(response.toString());
+		} catch (IOException e) {
+	        e.printStackTrace();
+	    } finally {
+	    	bw.close();
+	    	bw = null;
+	    }
 	}
 
 	public void addView(TM1View view) {
@@ -535,6 +575,22 @@ public class TM1Cube extends TM1Object {
 
 	public TM1Dimension getDimension(int i) {
 		return dimensions.get(i);
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof TM1Cube)) {
+			return false;
+		}
+		TM1Cube cube = (TM1Cube) o;
+		return cube.name.equals(this.name);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name);
 	}
 
 }

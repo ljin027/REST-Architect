@@ -123,7 +123,7 @@ public class ViewEditor {
 		this.view = view;
 		shell = new Shell(parent, SWT.RESIZE | SWT.MAX | SWT.MIN);
 		shell.setSize(860, 600);
-		shell.setText("Cubeviewer - " + cube.displayName + "/" + view.displayName);
+		shell.setText("Cubeviewer - " + cube.name + "/" + view.name);
 		display = shell.getDisplay();
 		createContents();
 		shell.layout();
@@ -192,11 +192,11 @@ public class ViewEditor {
 
 		viewlist = new String[cube.viewCount()];
 		for (int i = 0; i < cube.viewCount(); i++) {
-			viewlist[i] = cube.getview(i).displayName;
+			viewlist[i] = cube.getview(i).name;
 		}
 		combo.setItems(viewlist);
 		if (view != null) {
-			combo.setText(view.displayName);
+			combo.setText(view.name);
 		} else {
 			combo.setText("New view");
 		}
@@ -970,7 +970,7 @@ public class ViewEditor {
 		String[] elementNames = new String[dimensionCount];
 		for (int i=0; i<dimensionCount; i++){
 			TM1Dimension dimension = cube.getDimension(i);
-			elementNames[i] = findElementAtCellLocation(row, column, dimension.displayName);
+			elementNames[i] = findElementAtCellLocation(row, column, dimension.name);
 		}
 		SecurityReport securityReportWindow = new SecurityReport(shell, cube.getServer(), cube, elementNames);
 	}
@@ -980,7 +980,7 @@ public class ViewEditor {
 		String[] elementNames = new String[dimensionCount];
 		for (int i=0; i<dimensionCount; i++){
 			TM1Dimension dimension = cube.getDimension(i);
-			elementNames[i] = findElementEntityAtCellLocation(row, column, dimension.displayName);
+			elementNames[i] = findElementEntityAtCellLocation(row, column, dimension.name);
 		}
 		RuleTracer ruleTrace = new RuleTracer(shell, cube.getServer(), cube, elementNames);
 	}
@@ -991,20 +991,20 @@ public class ViewEditor {
 		TM1ViewAxes rowsaxes = view.getrowaxes();
 		for (int i = 0; i < rowheadercount; i++) {
 			//String colheader = columnsaxes.tuples.get(column - columnheadercount).members.get(i).name;
-			if(view.getColumnDimensionPosition(i).dimension.displayName.equals(dimensionName)){
+			if(view.getColumnDimensionPosition(i).dimension.name.equals(dimensionName)){
 				elementName = columnsaxes.tuples.get(column - columnheadercount).members.get(i).name;
 			}
 		}
 		for (int i = 0; i < columnheadercount; i++) {
 			//String rowheader = rowsaxes.tuples.get(row - rowheadercount).members.get(i).name;
-			if(view.getRowDimensionPosition(i).dimension.displayName.equals(dimensionName)){
+			if(view.getRowDimensionPosition(i).dimension.name.equals(dimensionName)){
 				elementName = rowsaxes.tuples.get(row - rowheadercount).members.get(i).name;
 			}
 		}
 		for (int i = 0; i < view.getfilterscount(); i++) {
 			//intersections = intersections.concat(view.getTitleDimensionPosition(i).dimension.displayName + ":" + view.getTitleDimensionPosition(i).element.displayName + "\n");
-			if (view.getTitleDimensionPosition(i).dimension.displayName.equals(dimensionName)) {
-				elementName = view.getTitleDimensionPosition(i).element.displayName;
+			if (view.getTitleDimensionPosition(i).dimension.name.equals(dimensionName)) {
+				elementName = view.getTitleDimensionPosition(i).element.name;
 			}
 		}
 		return elementName;
@@ -1016,20 +1016,20 @@ public class ViewEditor {
 		TM1ViewAxes rowsaxes = view.getrowaxes();
 		for (int i = 0; i < rowheadercount; i++) {
 			//String colheader = columnsaxes.tuples.get(column - columnheadercount).members.get(i).name;
-			if(view.getColumnDimensionPosition(i).dimension.displayName.equals(dimensionName)){
+			if(view.getColumnDimensionPosition(i).dimension.name.equals(dimensionName)){
 				elementName = "Dimensions('" + dimensionName + "')/" + "Hierarchies('" + dimensionName + "')/" + "Elements('" + columnsaxes.tuples.get(column - columnheadercount).members.get(i).name + "')";
 			}
 		}
 		for (int i = 0; i < columnheadercount; i++) {
 			//String rowheader = rowsaxes.tuples.get(row - rowheadercount).members.get(i).name;
-			if(view.getRowDimensionPosition(i).dimension.displayName.equals(dimensionName)){
+			if(view.getRowDimensionPosition(i).dimension.name.equals(dimensionName)){
 				elementName = "Dimensions('" + dimensionName + "')/" + "Hierarchies('" + dimensionName + "')/" + "Elements('" + rowsaxes.tuples.get(row - rowheadercount).members.get(i).name + "')";
 			}
 		}
 		for (int i = 0; i < view.getfilterscount(); i++) {
 			//intersections = intersections.concat(view.getTitleDimensionPosition(i).dimension.displayName + ":" + view.getTitleDimensionPosition(i).element.displayName + "\n");
-			if (view.getTitleDimensionPosition(i).dimension.displayName.equals(dimensionName)) {
-				elementName = "Dimensions('" + dimensionName + "')/" + "Hierarchies('" + dimensionName + "')/" + "Elements('" + view.getTitleDimensionPosition(i).element.displayName + "')";
+			if (view.getTitleDimensionPosition(i).dimension.name.equals(dimensionName)) {
+				elementName = "Dimensions('" + dimensionName + "')/" + "Hierarchies('" + dimensionName + "')/" + "Elements('" + view.getTitleDimensionPosition(i).element.name + "')";
 			}
 		}
 		return elementName;
@@ -1042,14 +1042,14 @@ public class ViewEditor {
 		TM1ViewAxes rowsaxes = view.getrowaxes();
 		for (int i = 0; i < rowheadercount; i++) {
 			String colheader = columnsaxes.tuples.get(column - columnheadercount).members.get(i).name;
-			intersections = intersections.concat(view.getColumnDimensionPosition(i).dimension.displayName + ":" + colheader + "\n");
+			intersections = intersections.concat(view.getColumnDimensionPosition(i).dimension.name + ":" + colheader + "\n");
 		}
 		for (int i = 0; i < columnheadercount; i++) {
 			String rowheader = rowsaxes.tuples.get(row - rowheadercount).members.get(i).name;
-			intersections = intersections.concat(view.getRowDimensionPosition(i).dimension.displayName + ":" + rowheader + "\n");
+			intersections = intersections.concat(view.getRowDimensionPosition(i).dimension.name + ":" + rowheader + "\n");
 		}
 		for (int i = 0; i < view.getfilterscount(); i++) {
-			intersections = intersections.concat(view.getTitleDimensionPosition(i).dimension.displayName + ":" + view.getTitleDimensionPosition(i).element.displayName + "\n");
+			intersections = intersections.concat(view.getTitleDimensionPosition(i).dimension.name + ":" + view.getTitleDimensionPosition(i).element.name + "\n");
 		}
 		infoMessage(intersections);
 	}

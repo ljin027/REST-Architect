@@ -13,7 +13,15 @@ import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.OrderedJSONObject;
 
-public class TM1Subset extends TM1Object {
+public class TM1Subset {
+	
+	public TM1Server tm1server;
+	public TM1Dimension dimension;
+	public TM1Hierarchy hierarchy;
+	public String name;
+	public String entity;
+	public String entitySet;
+	public OrderedJSONObject transferJSON;
 
 	static public int PUBLIC = 0;
 	static public int PRIVATE = 1;
@@ -22,8 +30,7 @@ public class TM1Subset extends TM1Object {
 	static public String STRING = "String";
 	static public String CONSOLIDATED = "Consolidated";
 
-	public TM1Dimension dimension;
-	public TM1Hierarchy hierarchy;
+
 
 	public String uniqueName;
 	public boolean aliasOn;
@@ -33,26 +40,29 @@ public class TM1Subset extends TM1Object {
 	private List<TM1Element> elements;
 
 	public TM1Subset(String name, TM1Server tm1server, TM1Hierarchy parent) {
-		super(name, TM1Object.SUBSET, parent, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
 		this.hierarchy = parent;
 		this.dimension = hierarchy.dimension;
+		this.entity = hierarchy.entity + "/PrivateSubsets('" + name + "')";
 		elements = new ArrayList<TM1Element>();
 		security = PRIVATE;
-		entity = parent.entity + "/PrivateSubsets('" + displayName + "')";
 		aliasOn = false;
 		alias = "";
 	}
 
 	public TM1Subset(String name, TM1Server tm1server, TM1Hierarchy parent, int security) {
-		super(name, TM1Object.SUBSET, parent, tm1server);
+		//super(name, TM1Object.SUBSET, parent, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
 		this.hierarchy = parent;
 		this.dimension = hierarchy.dimension;
 		elements = new ArrayList<TM1Element>();
 		this.security = security;
 		if (security == PRIVATE) {
-			entity = "PrivateSubsets('" + displayName + "')";
+			this.entity = hierarchy.entity + "/PrivateSubsets('" + name + "')";
 		} else if (security == PUBLIC) {
-			entity = "Subsets('" + displayName + "')";
+			this.entity = hierarchy.entity + "/Subsets('" + name + "')";
 		}
 		aliasOn = false;
 		alias = "";
@@ -83,7 +93,7 @@ public class TM1Subset extends TM1Object {
 	}
 
 	public TM1Hierarchy getHierarchy() {
-		return (TM1Hierarchy) parent;
+		return (TM1Hierarchy) hierarchy;
 	}
 
 	public boolean contains(String elementname) {
@@ -103,13 +113,13 @@ public class TM1Subset extends TM1Object {
 
 	public boolean readElementListFromServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		// System.out.println("Reading element list for subset " + name);
-		TM1Hierarchy hierarchy = (TM1Hierarchy) this.parent;
+		TM1Hierarchy hierarchy = (TM1Hierarchy) this.hierarchy;
 		hierarchy.readElementAliasesFromServer();
 		elements.clear();
 
-		if (displayName.equals("")) {
+		if (name.equals("")) {
 			//System.out.println("Getting all element for unnamed subset");
-			String request = dimension.entity + "/" + hierarchy.entity + "/" + entity + "/Elements";
+			String request = entity + "/Elements";
 			String query = "$select=Name,Type,Index,UniqueName,Level,Attributes";
 			tm1server.get(request, query);
 			OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
@@ -117,7 +127,7 @@ public class TM1Subset extends TM1Object {
 			for (int i = 0; i < jelements.length(); i++) {
 				OrderedJSONObject jelement = (OrderedJSONObject) jelements.getJSONObject(i);
 				String element_name = jelement.getString("Name");
-				TM1Element element = new TM1Element(element_name, tm1server, (TM1Hierarchy) this.parent);
+				TM1Element element = new TM1Element(element_name, tm1server, (TM1Hierarchy) this.hierarchy);
 				String unique_name = jelement.getString("UniqueName");
 				element.setUniqueName(unique_name);
 				String element_type = jelement.getString("Type");
@@ -136,7 +146,7 @@ public class TM1Subset extends TM1Object {
 			}
 			return true;
 		} else {
-			String request = dimension.entity + "/" + hierarchy.entity + "/" + entity;
+			String request = entity;
 			String query = "$expand=Elements($select=Name,Type,Index,UniqueName,Level,Attributes)";
 			tm1server.get(request, query);
 			OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
@@ -148,7 +158,7 @@ public class TM1Subset extends TM1Object {
 				String element_type = jelement.getString("Type");
 				int index = jelement.getInt("Index");
 				int level = jelement.getInt("Level");
-				TM1Element element = new TM1Element(element_name, tm1server, (TM1Hierarchy) this.parent);
+				TM1Element element = new TM1Element(element_name, tm1server, (TM1Hierarchy) this.hierarchy);
 				element.setUniqueName(unique_name);
 				element.setElementType(element_type);
 				element.set_index(index);
@@ -285,7 +295,7 @@ public class TM1Subset extends TM1Object {
 		if (name.isEmpty()){
 			alias = "";
 		} else {
-			String request = dimension.entity + "/" + hierarchy.entity + "/" + entity;
+			String request = entity;
 			String query = "$select=Alias";
 			tm1server.get(request, query);
 			OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
@@ -304,7 +314,7 @@ public class TM1Subset extends TM1Object {
 	}
 
 	public TM1Element findParentInSubset(TM1Element element) {
-		TM1Hierarchy hierarchy = (TM1Hierarchy) this.parent;
+		TM1Hierarchy hierarchy = (TM1Hierarchy) this.hierarchy;
 		return hierarchy.getParentElement(element);
 	}
 
@@ -316,7 +326,7 @@ public class TM1Subset extends TM1Object {
 		String request = entity;
 		OrderedJSONObject payload = new OrderedJSONObject();
 		payload.put("@odata.type", "ibm.tm1.api.v1.Subset");
-		payload.put("Name", displayName);
+		payload.put("Name", name);
 		JSONArray elementArray = new JSONArray();
 		for (int i = 0; i < elements.size(); i++) {
 			TM1Element element = elements.get(i);
@@ -349,11 +359,11 @@ public class TM1Subset extends TM1Object {
 		String query = "$expand=Elements";
 		tm1server.get(request, query);
 		OrderedJSONObject jo = new OrderedJSONObject(tm1server.response);
-		File subsetDir = new File(dir + "//" + hierarchy.displayName);
+		File subsetDir = new File(dir + "//" + hierarchy.name);
 		if (!subsetDir.exists()){
 			subsetDir.mkdir();
 		}
-		FileWriter fw = new FileWriter(subsetDir + "//" + displayName + ".sub", false);
+		FileWriter fw = new FileWriter(subsetDir + "//" + name + ".sub", false);
 		BufferedWriter bw = new BufferedWriter(fw);
 		try {
 			bw.write(jo.toString());

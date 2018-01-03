@@ -10,8 +10,15 @@ import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.OrderedJSONObject;
 import org.apache.wink.json4j.JSONArray;
 
-public class TM1Element extends TM1Object {
+public class TM1Element {
 
+	public TM1Server tm1server;
+	public TM1Hierarchy hierarchy;
+
+	public String name;
+	public String entity;
+	public String entitySet;
+	
 	public String uniqueName;
 	public String elementType;
 	public String alias;
@@ -19,7 +26,6 @@ public class TM1Element extends TM1Object {
 	public int index;
 	public int weight;
 
-	public TM1Hierarchy hierarchy;
 
 	protected List<TM1Element> children;
 	protected List<TM1Element> parents;
@@ -31,9 +37,10 @@ public class TM1Element extends TM1Object {
 	static public String CONSOLIDATED = "Consolidated";
 
 	public TM1Element(String name, TM1Server tm1server, TM1Hierarchy parent) {
-		super(name, TM1Object.ELEMENT, parent, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
 		this.hierarchy = parent;
-		uniqueName = "[" + parent.parent.displayName + "].[" + parent.displayName + "].[" + displayName + "]";
+		uniqueName = "[" + this.hierarchy.dimension.name + "].[" + this.hierarchy.name + "].[" + name + "]";
 		children = new ArrayList<TM1Element>();
 		parents = new ArrayList<TM1Element>();
 		aliases = new ArrayList<Alias>();
@@ -41,9 +48,10 @@ public class TM1Element extends TM1Object {
 	}
 
 	public TM1Element(String name, TM1Server tm1server, TM1Hierarchy parent, String elementType, int index, int weight, int level) {
-		super(name, TM1Object.ELEMENT, parent, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
 		this.hierarchy = parent;
-		uniqueName = "[" + parent.parent.displayName + "].[" + parent.displayName + "].[" + displayName + "]";
+		uniqueName = "[" + this.hierarchy.dimension.name + "].[" + this.hierarchy.name + "].[" + name + "]";
 		children = new ArrayList<TM1Element>();
 		parents = new ArrayList<TM1Element>();
 		aliases = new ArrayList<Alias>();
@@ -52,10 +60,6 @@ public class TM1Element extends TM1Object {
 		this.index = index;
 		this.weight = weight;
 		this.level = level;
-	}
-
-	public void setJson(OrderedJSONObject object) {
-		json = object;
 	}
 
 	public void setUniqueName(String unique_name) {

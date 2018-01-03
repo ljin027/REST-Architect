@@ -32,7 +32,7 @@ public class ProcessWorker extends Thread {
 			Display.getDefault().asyncExec( new Runnable() {
 				public void run() {
 					if (notify){
-						parentUI.infoMessage("Process '" + process.displayName + "'" + " completed succesfully");
+						parentUI.infoMessage("Process '" + process.name + "'" + " completed succesfully");
 					} 
 				}
 			});			

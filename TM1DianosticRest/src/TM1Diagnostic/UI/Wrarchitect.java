@@ -50,7 +50,6 @@ import TM1Diagnostic.REST.TM1Cube;
 import TM1Diagnostic.REST.TM1Dimension;
 import TM1Diagnostic.REST.TM1Folder;
 import TM1Diagnostic.REST.TM1Hierarchy;
-import TM1Diagnostic.REST.TM1Object;
 import TM1Diagnostic.REST.TM1ObjectReference;
 import TM1Diagnostic.REST.TM1Process;
 import TM1Diagnostic.REST.TM1RestException;

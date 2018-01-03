@@ -74,7 +74,7 @@ public class CubeProperties extends Dialog {
 	private void createContents() {
 		shlCubeProperties = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE);
 		shlCubeProperties.setSize(653, 537);
-		shlCubeProperties.setText("Cube Properties - " + cube.displayName);
+		shlCubeProperties.setText("Cube Properties - " + cube.name);
 		shlCubeProperties.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 		TableViewer tableViewer = new TableViewer(shlCubeProperties, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL);
@@ -149,7 +149,7 @@ public class CubeProperties extends Dialog {
 				}else if (selecteditem.getText(0).equals("MEASURES_DIMENSION")){
 					Combo newEditor = new Combo(cubeproperty_table, SWT.NONE);
 					for (int i=0; i<cube.dimensionCount(); i++){
-						newEditor.add(cube.getDimension(i).displayName);
+						newEditor.add(cube.getDimension(i).name);
 					}
 					newEditor.setText(selecteditem.getText(EDITABLECOLUMN));
 					newEditor.addModifyListener(new ModifyListener() {
@@ -164,7 +164,7 @@ public class CubeProperties extends Dialog {
 				} else if (selecteditem.getText(0).equals("TIME_DIMENSION")){
 					Combo newEditor = new Combo(cubeproperty_table, SWT.NONE);
 					for (int i=0; i<cube.dimensionCount(); i++){
-						newEditor.add(cube.getDimension(i).displayName);
+						newEditor.add(cube.getDimension(i).name);
 					}
 					newEditor.setText(selecteditem.getText(EDITABLECOLUMN));
 					newEditor.addModifyListener(new ModifyListener() {
@@ -221,13 +221,13 @@ public class CubeProperties extends Dialog {
 		 */
 		try {
 			String request = "Cubes('%7DCubeProperties')/tm1.Update";
-			String s_payload = "{\"Cells\":[{\"Tuple@odata.bind\":[\"Dimensions('}Cubes')/Hierarchies('}Cubes')/Elements('" + cube.displayName + "')\",\"Dimensions('}CubeProperties')/Hierarchies('}CubeProperties')/Elements('" + property + "')\"]}],\"Value\":\"" + value + "\"}";
+			String s_payload = "{\"Cells\":[{\"Tuple@odata.bind\":[\"Dimensions('}Cubes')/Hierarchies('}Cubes')/Elements('" + cube.name + "')\",\"Dimensions('}CubeProperties')/Hierarchies('}CubeProperties')/Elements('" + property + "')\"]}],\"Value\":\"" + value + "\"}";
 
 			OrderedJSONObject payload = new OrderedJSONObject();
 			JSONArray cells = new JSONArray();
 			OrderedJSONObject tuplebind = new OrderedJSONObject();
 			JSONArray tuples = new JSONArray();
-			tuples.put("Dimensions('}Cubes')/Hierarchies('}Cubes')/Elements('" + cube.displayName + "')");
+			tuples.put("Dimensions('}Cubes')/Hierarchies('}Cubes')/Elements('" + cube.name + "')");
 			tuples.put("Dimensions('}CubeProperties')/Hierarchies('}CubeProperties')/Elements('" + property + "')");
 			tuplebind.put("Tuple@odata.bind", tuples);
 			payload.put("Cells", cells);
@@ -266,7 +266,7 @@ public class CubeProperties extends Dialog {
 			String request = "ExecuteMDX";
 			String query = "$expand=Cells";
 			OrderedJSONObject payload = new OrderedJSONObject();
-			String mdxQuery = "SELECT {[}Cubes].[}Cubes].[" + cube.displayName + "]} on 0, ([}CubeProperties].members) on 1 FROM [}CubeProperties]";
+			String mdxQuery = "SELECT {[}Cubes].[}Cubes].[" + cube.name + "]} on 0, ([}CubeProperties].members) on 1 FROM [}CubeProperties]";
 			payload.put("MDX", mdxQuery);
 			tm1server.post(request, query, payload);
 			return true;

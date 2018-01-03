@@ -13,9 +13,13 @@ import org.apache.wink.json4j.JSONArray;
 import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.OrderedJSONObject;
 
-import TM1Diagnostic.TransferSubset;
-
-public class TM1Hierarchy extends TM1Object {
+public class TM1Hierarchy {
+	
+	public TM1Server tm1server;
+	public String name;
+	public String entity;
+	public String entitySet;
+	public OrderedJSONObject transferJSON;
 
 	static public int PUBLIC = 0;
 	static public int PRIVATE = 1;
@@ -36,24 +40,47 @@ public class TM1Hierarchy extends TM1Object {
 
 	public String alias;
 
+	public boolean expandedInExplorerTree;
 	public boolean subsetsExpandedInServerExplorer;
 	public boolean privateSubsetsExpandedInServerExplorer;
 
 	private TM1Element defaultElement;
 	
 	public TM1Hierarchy(String name, TM1Server tm1server, TM1Dimension parent) {
-		super(name, TM1Object.HIERARCHY, parent, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
 		this.dimension = parent;
+		this.entity = dimension.entity + "/Hierarchies('" + name + "')";
 		subsets = new ArrayList<TM1Subset>();
 		privateSubsets = new ArrayList<TM1Subset>();
 		aliases = new ArrayList<String>();
 		roots = new ArrayList<TM1Element>();
-		UniqueName = parent.unique_name + ".[" + displayName + "]";
+		UniqueName = parent.unique_name + ".[" + name + "]";
 
+		expandedInExplorerTree = false;
 		subsetsExpandedInServerExplorer = false;
 		privateSubsetsExpandedInServerExplorer = false;
 	}
 	
+	public TM1Hierarchy(File importFile) throws JSONException {
+		
+		this.name = transferJSON.getString("Name");
+		this.entity = dimension.entity + "/Hierarchies('" + name + "')";
+		
+		//this.tm1server = tm1server;
+		//this.dimension = parent;
+		subsets = new ArrayList<TM1Subset>();
+		privateSubsets = new ArrayList<TM1Subset>();
+		aliases = new ArrayList<String>();
+		roots = new ArrayList<TM1Element>();
+		//UniqueName = parent.unique_name + ".[" + name + "]";
+
+		expandedInExplorerTree = false;
+		subsetsExpandedInServerExplorer = false;
+		privateSubsetsExpandedInServerExplorer = false;
+	}
+	
+	/*
 	public void createOnServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException{
 		String request = "Dimensions('" + dimension + "')/Hierarchies";
 		tm1server.post(request, json);
@@ -61,6 +88,11 @@ public class TM1Hierarchy extends TM1Object {
 			TM1Subset subset = subsets.get(i);
 			//subset.importToServer(server);
 		}
+	}
+	*/
+	
+	public TM1Dimension getDimension() {
+		return dimension;
 	}
 
 	public int aliasCount() {
@@ -100,7 +132,7 @@ public class TM1Hierarchy extends TM1Object {
 	}
 
 	public boolean readDefaultElementFromServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
-		String request = dimension.entity + "/" + entity + "/DefaultMember";
+		String request = entity + "/DefaultMember";
 		String query = "$select=Element&$expand=Element";
 
 		tm1server.get(request, query);
@@ -138,7 +170,7 @@ public class TM1Hierarchy extends TM1Object {
 	}
 
 	public boolean readLevelsFromServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
-		String request = dimension.entity + "/" + entity + "/Levels";
+		String request = entity + "/Levels";
 		tm1server.get(request);
 		OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
 		JSONArray jlevels = jresponse.getJSONArray("value");
@@ -155,17 +187,17 @@ public class TM1Hierarchy extends TM1Object {
 	public boolean writeHierarchyToFile(String dimensionDir) throws IOException, JSONException, TM1RestException, URISyntaxException {
 		System.out.println("Function -> writeHierarchyToFile");
 		
-		File hierarchyDir = new File(dimensionDir + "//" + displayName);
+		File hierarchyDir = new File(dimensionDir + "//" + name);
 		if (!hierarchyDir.exists()){
 			hierarchyDir.mkdir();
 		} 
 		
-		String request = dimension.entity + "/" + entity;
+		String request = entity;
 		String query = "$expand=Elements";
 		tm1server.get(request, query);
 		OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
 
-		FileWriter fw = new FileWriter(dimensionDir + "//" + displayName + ".hier", false);
+		FileWriter fw = new FileWriter(dimensionDir + "//" + name + ".hier", false);
 		BufferedWriter bw = new BufferedWriter(fw);
 		try {
 			bw.write(jresponse.toString());
@@ -187,7 +219,7 @@ public class TM1Hierarchy extends TM1Object {
 
 	public boolean readHierarchyFromServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		roots.clear();
-		String request = dimension.entity + "/" + entity + "/Levels('0')/Members";
+		String request = entity + "/Levels('0')/Members";
 		String query = "$select=Name,Weight&$expand=Element,Children($select=Name,Weight;$expand=Element,Children($select=Name,Weight;$expand=Element,Children($select=Name,Weight;$expand=Element,Children)))";
 		tm1server.get(request, query);
 		OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
@@ -228,7 +260,7 @@ public class TM1Hierarchy extends TM1Object {
 	}
 
 	public void remove() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException {
-		String request = dimension.entity + "/" + entity;
+		String request = entity;
 		tm1server.delete(request);
 	}
 
@@ -271,7 +303,7 @@ public class TM1Hierarchy extends TM1Object {
 	}
 
 	public boolean readSubsetsFromServer() throws JSONException, ClientProtocolException, TM1RestException, URISyntaxException, IOException {
-		String request = dimension.entity + "/" + entity;
+		String request = entity;
 		String query = "$select=Subsets,PrivateSubsets&$expand=Subsets($select=Name,UniqueName,Alias),PrivateSubsets($select=Name,UniqueName,Alias)";
 		tm1server.get(request, query);
 		OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
@@ -292,7 +324,7 @@ public class TM1Hierarchy extends TM1Object {
 		}
 		for (int i = 0; i < subsets.size(); i++) {
 			TM1Subset subset = subsets.get(i);
-			if (!jsubsets.toString().contains("\"Name\":\"" + subset.displayName + "\"")) {
+			if (!jsubsets.toString().contains("\"Name\":\"" + subset.name + "\"")) {
 				subsets.remove(i);
 			}
 		}
@@ -312,7 +344,7 @@ public class TM1Hierarchy extends TM1Object {
 		}
 		for (int i = 0; i < privateSubsets.size(); i++) {
 			TM1Subset subset = privateSubsets.get(i);
-			if (!jPrivateSubsets.toString().contains("\"Name\":\"" + subset.displayName + "\"")) {
+			if (!jPrivateSubsets.toString().contains("\"Name\":\"" + subset.name + "\"")) {
 				privateSubsets.remove(i);
 			}
 		}
@@ -324,7 +356,7 @@ public class TM1Hierarchy extends TM1Object {
 
 	public boolean readElementAliasesFromServer() throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		aliases.clear();
-		String request = dimension.entity + "/" + entity + "/ElementAttributes";
+		String request = entity + "/ElementAttributes";
 		String query = "$filter=Type eq tm1.AttributeType'Alias'&$select=Name";
 		tm1server.get(request, query);
 		OrderedJSONObject jresponse = new OrderedJSONObject(tm1server.response);
@@ -338,14 +370,14 @@ public class TM1Hierarchy extends TM1Object {
 	}
 
 	public boolean checkServerForSubset(String subsetname) throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
-		String request = dimension.entity + "/" + entity + "/Subsets('" + subsetname + "')";
+		String request = entity + "/Subsets('" + subsetname + "')";
 		tm1server.get(request);
 		return true;
 
 	}
 
 	public boolean checkServerForPrivateSubset(String subsetname) throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
-		String request = dimension.entity + "/" + entity + "/PrivateSubsets('" + subsetname + "')";
+		String request = entity + "/PrivateSubsets('" + subsetname + "')";
 		tm1server.get(request);
 		return true;
 	}
@@ -399,7 +431,7 @@ public class TM1Hierarchy extends TM1Object {
 			for (int i = 0; i < parentElement.childElementCount(); i++) {
 				TM1Element childElement = parentElement.childElement(i);
 				OrderedJSONObject jChildElement = new OrderedJSONObject();
-				jChildElement.put("Name", childElement.displayName);
+				jChildElement.put("Name", childElement.name);
 				jChildElement.put("Type", childElement.elementType);
 				jChildElement.put("Index", childElement.index);
 				jChildElement.put("Level", childElement.level);
@@ -412,13 +444,13 @@ public class TM1Hierarchy extends TM1Object {
 	}
 
 	public void writeToServer() throws JSONException, ClientProtocolException, TM1RestException, URISyntaxException, IOException {
-		String request = dimension.entity + "/" + entity;
+		String request = entity;
 		OrderedJSONObject payload = new OrderedJSONObject();
 		JSONArray jelements = new JSONArray();
 		for (int i = 0; i < roots.size(); i++) {
 			TM1Element rootElement = roots.get(i);
 			OrderedJSONObject jRootElement = new OrderedJSONObject();
-			jRootElement.put("Name", rootElement.displayName);
+			jRootElement.put("Name", rootElement.name);
 			jRootElement.put("Type", rootElement.elementType);
 			jRootElement.put("Index", rootElement.index);
 			jRootElement.put("Level", rootElement.level);
@@ -433,7 +465,7 @@ public class TM1Hierarchy extends TM1Object {
 	}
 
 	public void moveElementBefore(TM1Element elementToMove, TM1Element beforeElement) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
-		String request = dimension.entity + "/" + entity + "/tm1.SetElement";
+		String request = entity + "/tm1.SetElement";
 		OrderedJSONObject payload = new OrderedJSONObject();
 		payload.put("Element@odata.bind", elementToMove.entity);
 		if (beforeElement != null) 	payload.put("Before@odata.bind", beforeElement.entity);
@@ -441,7 +473,7 @@ public class TM1Hierarchy extends TM1Object {
 	}
 
 	public void moveElementToRootBefore(TM1Element elementToMove, TM1Element beforeElement) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
-		String request = dimension.entity + "/" + entity + "/tm1.SetElement";
+		String request = entity + "/tm1.SetElement";
 		OrderedJSONObject payload = new OrderedJSONObject();
 		payload.put("Element@odata.bind", elementToMove.entity);
 		if (beforeElement != null) 	payload.put("Before@odata.bind", beforeElement.entity);
@@ -450,12 +482,34 @@ public class TM1Hierarchy extends TM1Object {
 	}
 
 	public void saveHierarchyAs(String newHierarchyName) throws JSONException, ClientProtocolException, TM1RestException, URISyntaxException, IOException {
-		String request = dimension.entity + "/" + entity + "/tm1.SaveAs";
+		String request = entity + "/tm1.SaveAs";
 		OrderedJSONObject payload = new OrderedJSONObject();
 		payload.put("Name", newHierarchyName);
 		payload.put("Overwrite", true);
 		payload.put("KeepExistingAttributes", true);
 		tm1server.post(request, payload);
+	}
+	
+	public void fileExport(File exportFile) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
+		//String request = entity;
+		//tm1server.get(request);
+		//OrderedJSONObject response = new OrderedJSONObject(tm1server.response);
+		OrderedJSONObject exportJSON = new OrderedJSONObject();
+		exportJSON.put("Name", name);
+		exportJSON.put("Dimension", dimension.name);
+
+		FileWriter fw = new FileWriter(exportFile);
+		BufferedWriter bw = new BufferedWriter(fw);
+		try {
+			bw.write(exportJSON.toString());
+		} catch (IOException e) {
+	        e.printStackTrace();
+	    } finally {
+	    	bw.close();
+	    	bw = null;
+	    }
+
+	
 	}
 
 }

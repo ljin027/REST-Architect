@@ -3,7 +3,12 @@ package TM1Diagnostic.REST;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TM1Folder extends TM1Object {
+public class TM1Folder {
+	
+	public TM1Server tm1server;
+	public String name;
+	public String entity;
+	public String entitySet;
 	
 	private String ID;
 	private TM1Folder parentFolder;
@@ -11,8 +16,8 @@ public class TM1Folder extends TM1Object {
 	private List<TM1ObjectReference> references;
 	
 	public TM1Folder(String name, TM1Server tm1server){
-		super(name, TM1Object.FOLDER, tm1server);
-		//this.parentFolder = parentFolder;
+		this.name = name;
+		this.tm1server = tm1server;
 		folders = new ArrayList<TM1Folder>();	
 		references = new ArrayList<TM1ObjectReference>();	
 		

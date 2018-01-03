@@ -163,11 +163,11 @@ public class ProcessEditor {
 
 	public ProcessEditor(Shell parent, TM1Process process) throws TM1RestException {
 		this.process = process;
-		this.tm1server = process.getServer();
+		this.tm1server = process.tm1server;
 		newProcess = false;
 		shell = new Shell(parent, SWT.RESIZE | SWT.MAX | SWT.MIN);
 		//shell.setSize(689, 448);
-		shell.setText("Process Editor - " + process.displayName);
+		shell.setText("Process Editor - " + process.name);
 		display = shell.getDisplay();
 		createContents();
 		shell.layout();
@@ -472,7 +472,7 @@ public class ProcessEditor {
 				viewSelectCombo.removeAll();
 				for (int i = 0; i < cube.viewCount(); i++) {
 					TM1View view = cube.getview(i);
-					viewSelectCombo.add(view.displayName);
+					viewSelectCombo.add(view.name);
 				}
 			}
 		});
@@ -485,7 +485,7 @@ public class ProcessEditor {
 		viewSelectCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		for (int i = 0; i < tm1server.cubeCount(); i++) {
 			TM1Cube cube = tm1server.getCube(i);
-			cubeSelectCombo.add(cube.displayName);
+			cubeSelectCombo.add(cube.name);
 		}
 
 		Composite composite_8 = new Composite(tm1view_panel, SWT.NONE);
@@ -540,7 +540,7 @@ public class ProcessEditor {
 		}
 		for (int i = 0; i < tm1server.dimensionCount(); i++) {
 			TM1Dimension dimension = tm1server.getDimension(i);
-			dimensionSelectCombo.add(dimension.displayName);
+			dimensionSelectCombo.add(dimension.name);
 		}
 
 		Label subsetSelectLabel = new Label(composite_12, SWT.NONE);
@@ -561,7 +561,7 @@ public class ProcessEditor {
 					subsetSelectCombo.removeAll();
 					for (int i = 0; i < hierarchy.subsetCount(); i++) {
 						TM1Subset subset = hierarchy.getSubset(i);
-						subsetSelectCombo.add(subset.displayName);
+						subsetSelectCombo.add(subset.name);
 					}
 				} catch (Exception e) {
 
@@ -805,7 +805,7 @@ public class ProcessEditor {
 				cubesmenuitem.setMenu(cubesMenu);
 
 				for (int i = 0; i < tm1server.cubeCount(); i++) {
-					String cubename = tm1server.getCube(i).displayName;
+					String cubename = tm1server.getCube(i).name;
 					MenuItem cube_menuitem = new MenuItem(cubesMenu, SWT.NONE);
 					cube_menuitem.setText(cubename);
 					cube_menuitem.addSelectionListener(new SelectionAdapter() {
@@ -825,7 +825,7 @@ public class ProcessEditor {
 				dimensions_menuitem.setMenu(dimension_menu);
 
 				for (int i = 0; i < tm1server.dimensionCount(); i++) {
-					String dimensionname = tm1server.getDimension(i).displayName;
+					String dimensionname = tm1server.getDimension(i).name;
 					MenuItem dimension_menuitem = new MenuItem(dimension_menu, SWT.NONE);
 					dimension_menuitem.setText(dimensionname);
 					dimension_menuitem.addSelectionListener(new SelectionAdapter() {
@@ -1011,7 +1011,7 @@ public class ProcessEditor {
 			public void widgetSelected(SelectionEvent arg0) {
 				updateProcessFromUI();
 				try {
-					process.updateOnServer(process.displayName);
+					process.updateOnServer(process.name);
 					message_box("Processed saved", SWT.OK);
 				} catch (JSONException | TM1RestException | URISyntaxException | IOException e) {
 					// TODO Auto-generated catch block
@@ -1151,7 +1151,7 @@ public class ProcessEditor {
 				viewSelectCombo.removeAll();
 				for (int i = 0; i < cube.viewCount(); i++) {
 					TM1View view = cube.getview(i);
-					viewSelectCombo.add(view.displayName);
+					viewSelectCombo.add(view.name);
 				}
 				viewSelectCombo.setText(process.getViewSource());
 
@@ -1166,7 +1166,7 @@ public class ProcessEditor {
 				subsetSelectCombo.removeAll();
 				for (int i = 0; i < hierarchy.subsetCount(); i++) {
 					TM1Subset subset = hierarchy.getSubset(i);
-					subsetSelectCombo.add(subset.displayName);
+					subsetSelectCombo.add(subset.name);
 				}
 				subsetSelectCombo.setText(process.getSubsetSource());
 

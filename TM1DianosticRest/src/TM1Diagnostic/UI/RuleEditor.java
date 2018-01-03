@@ -86,7 +86,7 @@ public class RuleEditor {
 
 		shell = new Shell(parent, SWT.RESIZE | SWT.MAX | SWT.MIN);
 		shell.setSize(689, 448);
-		shell.setText("Rule Editor -> " + cube.displayName);
+		shell.setText("Rule Editor -> " + cube.name);
 		shell.setLayout(new GridLayout(1, false));
 
 		display = shell.getDisplay();
@@ -166,7 +166,7 @@ public class RuleEditor {
 				cubesmenuitem.setMenu(cubesMenu);
 
 				for (int i=0; i<tm1server.cubeCount(); i++){
-					String cubename = tm1server.getCube(i).displayName;
+					String cubename = tm1server.getCube(i).name;
 					if (!cubename.startsWith("}")){
 						MenuItem cube_menuitem = new MenuItem(cubesMenu, SWT.NONE);
 						cube_menuitem.setText(cubename);
@@ -176,7 +176,7 @@ public class RuleEditor {
 								MenuItem item = (MenuItem)event.getSource();
 								String s = "DB('" + item.getText() + "'";
 								for (int j=0; j<cube.dimensionCount(); j++){
-									s = s.concat(",!" + cube.getDimension(j).displayName);
+									s = s.concat(",!" + cube.getDimension(j).name);
 								}
 								s = s.concat(")");
 								rules_text.insert(s);
@@ -192,7 +192,7 @@ public class RuleEditor {
 								MenuItem item = (MenuItem)event.getSource();
 								String s = "DB('" + item.getText() + "'";
 								for (int j=0; j<cube.dimensionCount(); j++){
-									s = s.concat(",!" + cube.getDimension(j).displayName);
+									s = s.concat(",!" + cube.getDimension(j).name);
 								}
 								s = s.concat(")");
 								rules_text.insert(s);
@@ -207,7 +207,7 @@ public class RuleEditor {
 				dimensions_menuitem.setMenu(dimension_menu);
 
 				for (int i=0; i<cube.dimensionCount(); i++){
-					String dimensionname = cube.getDimension(i).displayName;
+					String dimensionname = cube.getDimension(i).name;
 					if (!dimensionname.startsWith("}")){
 						MenuItem dimension_menuitem = new MenuItem(dimension_menu, SWT.NONE);
 						dimension_menuitem.setText(dimensionname);

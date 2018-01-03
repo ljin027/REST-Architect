@@ -50,24 +50,19 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.TreeEvent;
 import org.eclipse.swt.events.TreeListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
-import TM1Diagnostic.TransferChore;
-import TM1Diagnostic.TransferCube;
-import TM1Diagnostic.TransferDimension;
-import TM1Diagnostic.TransferHierarchy;
-import TM1Diagnostic.TransferProcess;
 import TM1Diagnostic.TransferSpec;
-import TM1Diagnostic.TransferSubset;
+
 import TM1Diagnostic.ZipUtils;
-import TM1Diagnostic.REST.FileTransferHelper;
 import TM1Diagnostic.REST.TM1Blob;
 import TM1Diagnostic.REST.TM1Chore;
 import TM1Diagnostic.REST.TM1Cube;
 import TM1Diagnostic.REST.TM1Dimension;
+import TM1Diagnostic.REST.TM1Element;
 import TM1Diagnostic.REST.TM1Folder;
 import TM1Diagnostic.REST.TM1Hierarchy;
-import TM1Diagnostic.REST.TM1Object;
 import TM1Diagnostic.REST.TM1ObjectReference;
 import TM1Diagnostic.REST.TM1Process;
 import TM1Diagnostic.REST.TM1RestException;
@@ -88,6 +83,8 @@ import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.DragDetectListener;
+import org.eclipse.swt.events.DragDetectEvent;
 
 public class TransferEditor extends Dialog {
 
@@ -114,9 +111,7 @@ public class TransferEditor extends Dialog {
 	private File exportFile;
 	private boolean showControlObjects;
 
-	private List<TM1Object> transferObjects;
-
-	private FileTransferHelper fileTransferHelper;
+	private List<Object> transferObjects;
 
 	private TransferSpec transferSpec;
 
@@ -155,8 +150,7 @@ public class TransferEditor extends Dialog {
 		setText("SWT Dialog");
 		this.tm1server = tm1server;
 		export_items = new ArrayList<TreeItem>();
-		transferObjects = new ArrayList<TM1Object>();
-		fileTransferHelper = new FileTransferHelper(tm1server);
+		transferObjects = new ArrayList<Object>();
 		transferSpec = new TransferSpec();
 	}
 
@@ -297,7 +291,8 @@ public class TransferEditor extends Dialog {
 		SashForm sashForm = new SashForm(composite, SWT.NONE);
 		sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
-		transferSourceTree = new Tree(sashForm, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		transferSourceTree = new Tree(sashForm, SWT.BORDER | SWT.MULTI);
+
 		transferSourceTree.setHeaderVisible(true);
 		transferSourceTree.addListener(SWT.Resize, new Listener() {
 			@Override
@@ -333,7 +328,7 @@ public class TransferEditor extends Dialog {
 		TreeColumn trclmnNewColumn = new TreeColumn(transferSourceTree, SWT.NONE);
 		trclmnNewColumn.setText("Source Object");
 
-		transferObjects = new ArrayList<TM1Object>();
+		transferObjects = new ArrayList<Object>();
 
 		final List<TreeItem> dragSourceItems = new ArrayList<TreeItem>();
 
@@ -346,10 +341,41 @@ public class TransferEditor extends Dialog {
 					transferObjects.clear();
 					for (int i = selection.length - 1; i >= 0; i--) {
 						dragSourceItems.add(selection[i]);
-						if (selection[i].getData() instanceof TM1Object) {
-							transferObjects.add((TM1Object) selection[i].getData());
+						if (selection[i].getData() instanceof TM1Dimension) {
+							transferObjects.add((Object) selection[i].getData());
+						} else if (selection[i].getData() instanceof TM1Cube) {
+							transferObjects.add((Object) selection[i].getData());
+						} else if (selection[i].getData() instanceof TM1Process) {
+							transferObjects.add((Object) selection[i].getData());
+						} else if (selection[i].getData() instanceof TM1Chore) {
+							transferObjects.add((Object) selection[i].getData());
 						} else if (selection[i].getData() instanceof String) {
-
+							String objectType = (String)selection[i].getData();
+							//System.out.println("Transfer string " + objectType);
+							if (objectType.equals("Cubes")) {
+								for (int j=0; j<selection[i].getItemCount(); j++) {
+									TreeItem processTreeItem = selection[i].getItem(j);
+									transferObjects.add((Object) processTreeItem.getData());
+								}
+							}
+							if (objectType.equals("Dimensions")) {
+								for (int j=0; j<selection[i].getItemCount(); j++) {
+									TreeItem processTreeItem = selection[i].getItem(j);
+									transferObjects.add((Object) processTreeItem.getData());
+								}
+							}
+							if (objectType.equals("Processes")) {
+								for (int j=0; j<selection[i].getItemCount(); j++) {
+									TreeItem processTreeItem = selection[i].getItem(j);
+									transferObjects.add((Object) processTreeItem.getData());
+								}
+							}
+							if (objectType.equals("Chores")) {
+								for (int j=0; j<selection[i].getItemCount(); j++) {
+									TreeItem processTreeItem = selection[i].getItem(j);
+									transferObjects.add((Object) processTreeItem.getData());
+								}
+							}
 						} else {
 
 						}
@@ -365,11 +391,10 @@ public class TransferEditor extends Dialog {
 
 			public void dragFinished(DragSourceEvent event) {
 				if (event.detail == DND.DROP_MOVE) {
-					// for (int i = 0; i < dragSourceItems.size(); i++) {
-					// TreeItem t = dragSourceItems.get(i);
-					// t.dispose();
-					// t = null;
-					// }
+					/*
+					 * for (int i = 0; i < dragSourceItems.size(); i++) { TreeItem t =
+					 * dragSourceItems.get(i); t.dispose(); t = null; }
+					 */
 				}
 			}
 		});
@@ -401,6 +426,50 @@ public class TransferEditor extends Dialog {
 
 		DropTarget dropTarget = new DropTarget(transferTargetTree, DND.DROP_MOVE);
 		dropTarget.setTransfer(types);
+
+		dropTarget.addDropListener(new DropTargetAdapter() {
+
+			public void dragOver(DropTargetEvent event) {
+				// System.out.println("Drag over target tree");
+				event.feedback = DND.FEEDBACK_EXPAND | DND.FEEDBACK_SCROLL;
+				if (event.item != null) {
+					Display display = shlExport.getDisplay();
+				}
+			}
+
+			public void drop(DropTargetEvent event) {
+				try {
+					DropTarget target = (DropTarget) event.widget;
+					for (int i = 0; i < transferObjects.size(); i++) {
+						System.out.println("Adding object " + i + " out of " + transferObjects.size());
+						Object obj = transferObjects.get(i);
+						if (obj instanceof TM1Dimension) {
+							TM1Dimension dimension = (TM1Dimension) obj;
+							transferSpec.addDimension(dimension);
+							//System.out.println("Dimension " + dimension.name);
+						}
+						if (obj instanceof TM1Cube) {
+							TM1Cube cube = (TM1Cube) obj;
+							transferSpec.addCube(cube);
+							//System.out.println("Cube " + cube.name);
+						}
+						if (obj instanceof TM1Process) {
+							TM1Process process = (TM1Process) obj;
+							transferSpec.addProcess(process);
+							//System.out.println("Process " + process.name);
+						}
+						if (obj instanceof TM1Chore) {
+							TM1Chore chore = (TM1Chore) obj;
+							transferSpec.addChore(chore);
+							//System.out.println("Chore " + chore.name);
+						}
+					}
+					updateTargetTree();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
 
 		TreeColumn trclmnNewColumn_1 = new TreeColumn(transferTargetTree, SWT.NONE);
 		trclmnNewColumn_1.setWidth(169);
@@ -448,8 +517,8 @@ public class TransferEditor extends Dialog {
 	}
 
 	private void checkSourceItem(TreeItem checkedTreeItem) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
-		if (checkedTreeItem.getData() instanceof TM1Object) {
-			transferSpec.addModelObject((TM1Object) checkedTreeItem.getData());
+		if (checkedTreeItem.getData() instanceof Object) {
+			// transferSpec.addModelObject((Object) checkedTreeItem.getData());
 		}
 		for (int i = 0; i < checkedTreeItem.getItemCount(); i++) {
 			TreeItem treeItemChild = checkedTreeItem.getItem(i);
@@ -465,6 +534,103 @@ public class TransferEditor extends Dialog {
 		}
 	}
 
+	public void updateTargetTree() {
+		try {
+			System.out.println("Updating target tree");
+			transferTargetTree.removeAll();
+
+			if (transferSpec.getCubeCount() > 0) {
+				TreeItem cubesnode = new TreeItem(transferTargetTree, SWT.NONE);
+				cubesnode.setText("Cubes");
+				cubesnode.setImage(CUBEICON);
+				cubesnode.setData("Cubes");
+				
+				for (int i = 0; i < transferSpec.getCubeCount(); i++) {
+					TM1Cube cube = transferSpec.getCube(i);
+					TreeItem cubenode = new TreeItem(cubesnode, SWT.NONE);
+					cubenode.setText(cube.name);
+					cubenode.setImage(CUBEICON);
+					cubenode.setData(cube);
+
+					cube.readCubeViewsFromServer();
+					
+					TreeItem viewsnode = new TreeItem(cubenode, SWT.NONE);
+					viewsnode.setText("Views");
+					viewsnode.setData("Views");
+					viewsnode.setImage(VIEWICON);
+					for (int j = 0; j < cube.viewCount(); j++) {
+						TM1View view = cube.getview(j);
+						TreeItem viewnode = new TreeItem(viewsnode, SWT.NONE);
+						viewnode.setImage(VIEWICON);
+						viewnode.setText(view.name);
+						viewnode.setData(view);
+					}
+					if (cube.checkServerForRules()) {
+						TreeItem rulenode = new TreeItem(cubenode, SWT.NONE);
+						rulenode.setText("Rules");
+						rulenode.setData("Rules");
+						rulenode.setImage(RULEICON);
+					}
+				}
+				cubesnode.setExpanded(true);
+			}
+
+			if (transferSpec.getDimensionCount() > 0) {
+				TreeItem dimsnode = new TreeItem(transferTargetTree, SWT.NONE);
+				dimsnode.setText("Dimensions");
+				dimsnode.setImage(DIMICON);
+				dimsnode.setData("Dimensions");
+				for (int i = 0; i < transferSpec.getDimensionCount(); i++) {
+					TM1Dimension dimension = transferSpec.getDimension(i);
+					String dimensionname = dimension.name;
+					TreeItem dimensionnode = new TreeItem(dimsnode, SWT.NONE);
+					dimensionnode.setImage(DIMICON);
+					dimensionnode.setData(dimension);
+					dimensionnode.setText(dimensionname);
+				}
+				dimsnode.setExpanded(true);
+			}
+
+			if (transferSpec.getProcessCount() > 0) {
+				TreeItem processesnode = new TreeItem(transferTargetTree, SWT.NONE);
+				processesnode.setText("Processes");
+				processesnode.setImage(PROICON);
+				processesnode.setData("Processes");
+				for (int i = 0; i < transferSpec.getProcessCount(); i++) {
+					TM1Process process = transferSpec.getProcess(i);
+					String processname = process.name;
+					TreeItem processnode = new TreeItem(processesnode, SWT.NONE);
+					processnode.setText(processname);
+					processnode.setImage(PROICON);
+					processnode.setData(process);
+				}
+				processesnode.setExpanded(true);
+			}
+
+			if (transferSpec.getChoreCount() > 0) {
+				TreeItem choresnode = new TreeItem(transferTargetTree, SWT.NONE);
+				choresnode.setText("Chores");
+				choresnode.setImage(CHOICON);
+				choresnode.setData("Chores");
+				for (int i = 0; i < transferSpec.getChoreCount(); i++) {
+					TM1Chore chore = transferSpec.getChore(i);
+					String chorename = chore.name;
+					TreeItem chorenode = new TreeItem(choresnode, SWT.NONE);
+					chorenode.setText(chorename);
+					chorenode.setImage(CHOICON);
+					chorenode.setData(chore);
+				}
+				choresnode.setExpanded(true);
+			}
+
+			for (TreeColumn tc : transferTargetTree.getColumns())
+				tc.pack();
+			transferTargetTree.redraw();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
 	public void updateTM1ServerExportTree() {
 		try {
 			transferSourceTree.removeAll();
@@ -477,10 +643,10 @@ public class TransferEditor extends Dialog {
 				int count = tm1server.cubeCount();
 				for (int i = 0; i < count; i++) {
 					TM1Cube cube = tm1server.getCube(i);
-					if (!showControlObjects && cube.displayName.startsWith("}")) {
+					if (!showControlObjects && cube.name.startsWith("}")) {
 					} else {
 						TreeItem cubenode = new TreeItem(cubesnode, SWT.NONE);
-						cubenode.setText(cube.displayName);
+						cubenode.setText(cube.name);
 						cubenode.setImage(CUBEICON);
 						cubenode.setData(cube);
 
@@ -493,7 +659,7 @@ public class TransferEditor extends Dialog {
 							TM1Dimension dimension = cube.getDimension(j);
 							TreeItem dimensionNode = new TreeItem(cubeDimensiosNode, SWT.NONE);
 							dimensionNode.setImage(DIMICON);
-							dimensionNode.setText(dimension.displayName);
+							dimensionNode.setText(dimension.name);
 							dimensionNode.setData(dimension);
 						}
 						cube.readCubeViewsFromServer();
@@ -505,7 +671,7 @@ public class TransferEditor extends Dialog {
 							TM1View view = cube.getview(j);
 							TreeItem viewnode = new TreeItem(viewsnode, SWT.NONE);
 							viewnode.setImage(VIEWICON);
-							viewnode.setText(view.displayName);
+							viewnode.setText(view.name);
 							viewnode.setData(view);
 						}
 
@@ -517,24 +683,26 @@ public class TransferEditor extends Dialog {
 						}
 					}
 				}
+				cubesnode.setExpanded(true);
 			}
 
 			if (tm1server.dimensionCount() > 0) {
-				TreeItem dimsnode = new TreeItem(transferSourceTree, SWT.NONE);
-				dimsnode.setText("Dimensions");
-				dimsnode.setImage(DIMICON);
-				dimsnode.setData("Dimensions");
+				TreeItem dimensionsnode = new TreeItem(transferSourceTree, SWT.NONE);
+				dimensionsnode.setText("Dimensions");
+				dimensionsnode.setImage(DIMICON);
+				dimensionsnode.setData("Dimensions");
 				for (int i = 0; i < tm1server.dimensionCount(); i++) {
 					TM1Dimension dimension = tm1server.getDimension(i);
-					String dimensionname = dimension.displayName;
+					String dimensionname = dimension.name;
 					if (!showControlObjects && dimensionname.startsWith("}")) {
 					} else {
-						TreeItem dimensionnode = new TreeItem(dimsnode, SWT.NONE);
+						TreeItem dimensionnode = new TreeItem(dimensionsnode, SWT.NONE);
 						dimensionnode.setImage(DIMICON);
 						dimensionnode.setData(dimension);
 						dimensionnode.setText(dimensionname);
 					}
 				}
+				dimensionsnode.setExpanded(true);
 			}
 
 			if (tm1server.processCount() > 0) {
@@ -544,7 +712,7 @@ public class TransferEditor extends Dialog {
 				processesnode.setData("Processes");
 				for (int i = 0; i < tm1server.processCount(); i++) {
 					TM1Process process = tm1server.getProcess(i);
-					String processname = process.displayName;
+					String processname = process.name;
 					if (!showControlObjects && processname.startsWith("}")) {
 					} else {
 						TreeItem processnode = new TreeItem(processesnode, SWT.NONE);
@@ -553,6 +721,7 @@ public class TransferEditor extends Dialog {
 						processnode.setData(process);
 					}
 				}
+				processesnode.setExpanded(true);
 			}
 
 			if (tm1server.choreCount() > 0) {
@@ -562,16 +731,16 @@ public class TransferEditor extends Dialog {
 				choresnode.setData("Chores");
 				for (int i = 0; i < tm1server.choreCount(); i++) {
 					TM1Chore chore = tm1server.getChore(i);
-					String chorename = chore.displayName;
+					String chorename = chore.name;
 					TreeItem chorenode = new TreeItem(choresnode, SWT.NONE);
 					chorenode.setText(chorename);
 					chorenode.setImage(CHOICON);
 					chorenode.setData(chore);
 				}
+				choresnode.setExpanded(true);
 			}
 
-			for (TreeColumn tc : transferSourceTree.getColumns())
-				tc.pack();
+			for (TreeColumn tc : transferSourceTree.getColumns()) tc.pack();
 			transferSourceTree.redraw();
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -636,7 +805,7 @@ public class TransferEditor extends Dialog {
 			hierarchiesnode.setText("Hierarchies");
 			for (int i = 0; i < hierarchycount; i++) {
 				TM1Hierarchy hierarchy = dimension.getHeirarchy(i);
-				String hierarchyname = hierarchy.displayName;
+				String hierarchyname = hierarchy.name;
 				TreeItem hierarchynode = new TreeItem(hierarchiesnode, SWT.NONE);
 				hierarchynode.setText(hierarchyname);
 				hierarchynode.setImage(HIERICON);
@@ -651,13 +820,7 @@ public class TransferEditor extends Dialog {
 				subsetsnode.setImage(SUBICON);
 				subsetsnode.setData("Subsets");
 				updateSubsetListNode(subsetsnode);
-				if (hierarchy.subsetsExpandedInServerExplorer) {
-					subsetsnode.setExpanded(true);
-				}
 
-				if (hierarchy.expandedInExplorerTree) {
-					hierarchynode.setExpanded(true);
-				}
 			}
 		} catch (TM1RestException | URISyntaxException | IOException | JSONException e) {
 			// TODO Auto-generated catch block
@@ -673,7 +836,7 @@ public class TransferEditor extends Dialog {
 		int privateSubsetCount = hierarchy.privateSubsetCount();
 		for (int i = 0; i < privateSubsetCount; i++) {
 			TM1Subset subset = hierarchy.getPrivateSubset(i);
-			String subsetname = subset.displayName;
+			String subsetname = subset.name;
 			TreeItem subsetnode = new TreeItem(subsetListNode, SWT.NONE);
 			subsetnode.setText(subsetname);
 			subsetnode.setImage(SUBICON);
@@ -683,7 +846,7 @@ public class TransferEditor extends Dialog {
 		int subsetcount = hierarchy.subsetCount();
 		for (int i = 0; i < subsetcount; i++) {
 			TM1Subset subset = hierarchy.getSubset(i);
-			String subsetname = subset.displayName;
+			String subsetname = subset.name;
 			TreeItem subsetnode = new TreeItem(subsetListNode, SWT.NONE);
 			subsetnode.setText(subsetname);
 			subsetnode.setImage(PRIVSUBICON);
@@ -704,7 +867,7 @@ public class TransferEditor extends Dialog {
 			blobsnode.setText("Blobs");
 			for (int i = 0; i < blobcount; i++) {
 				TM1Blob blob = tm1server.getBlob(i);
-				String blobname = blob.displayName;
+				String blobname = blob.name;
 				TreeItem blobnode = new TreeItem(blobsnode, SWT.NONE);
 				blobnode.setText(blobname);
 				blobnode.setImage(CHOICON);
@@ -726,7 +889,7 @@ public class TransferEditor extends Dialog {
 			applicationsnode.setText("Applications");
 			for (int i = 0; i < applicationcount; i++) {
 				TM1Folder folder = tm1server.getFolder(i);
-				String foldername = folder.displayName;
+				String foldername = folder.name;
 				TreeItem appnode = new TreeItem(applicationsnode, SWT.NONE);
 				appnode.setText(foldername);
 				appnode.setImage(FOLDERICON);
@@ -744,7 +907,7 @@ public class TransferEditor extends Dialog {
 		for (int i = 0; i < tm1folder.getFolderCount(); i++) {
 			TM1Folder folder = tm1folder.getFolder(i);
 			TreeItem childNode = new TreeItem(applicationNode, SWT.NONE);
-			childNode.setText(folder.displayName);
+			childNode.setText(folder.name);
 			childNode.setImage(FOLDERICON);
 			childNode.setData(folder);
 			updateApplicationNode(childNode);
@@ -752,7 +915,7 @@ public class TransferEditor extends Dialog {
 		for (int i = 0; i < tm1folder.getReferenceCount(); i++) {
 			TM1ObjectReference reference = tm1folder.getReference(i);
 			TreeItem childNode = new TreeItem(applicationNode, SWT.NONE);
-			childNode.setText(reference.displayName);
+			childNode.setText(reference.name);
 			if (reference.referenceType == CUBE) {
 				childNode.setImage(CUBEICON);
 			} else if (reference.referenceType == PROCESS) {
@@ -775,70 +938,12 @@ public class TransferEditor extends Dialog {
 		}
 	}
 
-	public void getselectedobjects(TreeItem t) {
-		int childcount = t.getItemCount();
-		if (t.getData() instanceof TM1Object) {
-			TM1Object export_object = (TM1Object) t.getData();
-			if (t.getChecked()) {
-				export_items.add(t);
-			}
-		}
-		for (int i = 0; i < childcount; i++) {
-			TreeItem child = t.getItem(i);
-			getselectedobjects(child);
-		}
-	}
-
 	/*
-	 * private void updateFileExportTree() throws TM1RestException {
-	 * transferTargetTree.removeAll();
-	 * 
-	 * if (fileTransferHelper.cubeCount() > 0) { TreeItem cubesnode = new
-	 * TreeItem(transferTargetTree, SWT.NONE); cubesnode.setText("Cubes");
-	 * cubesnode.setImage(CUBEICON); cubesnode.setData("Cubes"); for (int i = 0; i <
-	 * tm1server.cubeCount(); i++) { TM1Cube cube = fileTransferHelper.getCube(i);
-	 * TreeItem cubenode = new TreeItem(cubesnode, SWT.NONE);
-	 * cubenode.setText(cube.displayName); cubenode.setImage(CUBEICON);
-	 * cubenode.setData(cube); if (cube.expandedInExplorerTree) {
-	 * updateCubeNode(cubenode); cubenode.setExpanded(true); } else { TreeItem
-	 * cubeChildNode = new TreeItem(cubenode, SWT.NONE); cubeChildNode.setText("");
-	 * } } }
-	 * 
-	 * if (fileTransferHelper.dimensionCount() > 0) { TreeItem dimsnode = new
-	 * TreeItem(transferTargetTree, SWT.NONE); dimsnode.setText("Dimensions");
-	 * dimsnode.setImage(DIMICON); dimsnode.setData("Dimensions"); for (int i = 0; i
-	 * < tm1server.dimensionCount(); i++) { TM1Dimension dimension =
-	 * fileTransferHelper.getDimension(i); String dimensionname =
-	 * dimension.displayName; TreeItem dimensionnode = new TreeItem(dimsnode,
-	 * SWT.NONE); dimensionnode.setImage(DIMICON); dimensionnode.setData(dimension);
-	 * dimensionnode.setText(dimensionname);
-	 * 
-	 * if (dimension.expandedInExplorerTree) { updateDimensionNode(dimensionnode);
-	 * dimensionnode.setExpanded(true); } else { TreeItem dimensionChildNode = new
-	 * TreeItem(dimensionnode, SWT.NONE); dimensionChildNode.setText(""); } } }
-	 * 
-	 * if (fileTransferHelper.processCount() > 0) { TreeItem processesnode = new
-	 * TreeItem(transferTargetTree, SWT.NONE); processesnode.setText("Processes");
-	 * processesnode.setImage(PROICON); processesnode.setData("Processes"); for (int
-	 * i = 0; i < tm1server.processCount(); i++) { TM1Process process =
-	 * fileTransferHelper.getProcess(i); String processname = process.displayName;
-	 * TreeItem processnode = new TreeItem(processesnode, SWT.NONE);
-	 * processnode.setText(processname); processnode.setImage(PROICON);
-	 * processnode.setData(process); } }
-	 * 
-	 * if (fileTransferHelper.choreCount() > 0) { TreeItem choresnode = new
-	 * TreeItem(transferTargetTree, SWT.NONE); choresnode.setText("Chores");
-	 * choresnode.setImage(CHOICON); choresnode.setData("Chores"); for (int i = 0; i
-	 * < tm1server.choreCount(); i++) { TM1Chore chore =
-	 * fileTransferHelper.getChore(i); String chorename = chore.displayName;
-	 * TreeItem chorenode = new TreeItem(choresnode, SWT.NONE);
-	 * chorenode.setText(chorename); chorenode.setImage(CHOICON);
-	 * chorenode.setData(chore); } }
-	 * 
-	 * for (TreeColumn tc : transferTargetTree.getColumns()) tc.pack();
-	 * transferTargetTree.redraw();
-	 * 
-	 * }
+	 * public void getselectedobjects(TreeItem t) { int childcount =
+	 * t.getItemCount(); if (t.getData() instanceof TM1Object) { TM1Object
+	 * export_object = (TM1Object) t.getData(); if (t.getChecked()) {
+	 * export_items.add(t); } } for (int i = 0; i < childcount; i++) { TreeItem
+	 * child = t.getItem(i); getselectedobjects(child); } }
 	 */
 
 	private void setSourceTreeColumnSize() {
@@ -866,7 +971,7 @@ public class TransferEditor extends Dialog {
 			cubesParentNode.setImage(CUBEICON);
 			cubesParentNode.setChecked(true);
 			for (int i = 0; i < transferSpec.getCubeCount(); i++) {
-				TransferCube cube = transferSpec.getCube(i);
+				TM1Cube cube = transferSpec.getCube(i);
 				TreeItem cubeNode = new TreeItem(cubesParentNode, SWT.NONE);
 				cubeNode.setText(cube.name);
 				cubeNode.setImage(CUBEICON);
@@ -882,14 +987,14 @@ public class TransferEditor extends Dialog {
 			dimParentNode.setImage(DIMICON);
 			dimParentNode.setChecked(true);
 			for (int i = 0; i < transferSpec.getDimensionCount(); i++) {
-				TransferDimension dimension = transferSpec.getDimension(i);
+				TM1Dimension dimension = transferSpec.getDimension(i);
 				TreeItem dimNode = new TreeItem(dimParentNode, SWT.NONE);
 				dimNode.setText(dimension.name);
 				dimNode.setImage(DIMICON);
 				dimNode.setData(dimension);
 				dimNode.setChecked(true);
-				for (int j = 0; j < dimension.getHierarchyCount(); j++) {
-					TransferHierarchy hierarchy = dimension.getHierarchy(j);
+				for (int j = 0; j < dimension.hierarchyCount(); j++) {
+					TM1Hierarchy hierarchy = dimension.getHeirarchy(j);
 					TreeItem hierarchyNode = new TreeItem(dimNode, SWT.NONE);
 					hierarchyNode.setText(hierarchy.name);
 					hierarchyNode.setImage(HIERICON);
@@ -912,7 +1017,7 @@ public class TransferEditor extends Dialog {
 			processParentNode.setImage(PROICON);
 			processParentNode.setChecked(true);
 			for (int i = 0; i < transferSpec.getProcessCount(); i++) {
-				TransferProcess process = transferSpec.getProcess(i);
+				TM1Process process = transferSpec.getProcess(i);
 				TreeItem processNode = new TreeItem(processParentNode, SWT.NONE);
 				processNode.setText(process.name);
 				processNode.setImage(PROICON);
@@ -928,7 +1033,7 @@ public class TransferEditor extends Dialog {
 			choreParentNode.setImage(CHOICON);
 			choreParentNode.setChecked(true);
 			for (int i = 0; i < transferSpec.getChoreCount(); i++) {
-				TransferChore chore = transferSpec.getChore(i);
+				TM1Chore chore = transferSpec.getChore(i);
 				TreeItem choreNode = new TreeItem(choreParentNode, SWT.NONE);
 				choreNode.setText(chore.name);
 				choreNode.setImage(CHOICON);

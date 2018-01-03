@@ -36,16 +36,16 @@ public class CubeViewerPosition {
 	}
 
 	public String dimensionName() {
-		return dimension.displayName;
+		return dimension.name;
 	}
 
 	public String hierarchyName() {
-		return hierarchy.displayName;
+		return hierarchy.name;
 	}
 
 	public String subsetName() {
 		if (subset != null) {
-			return subset.displayName;
+			return subset.name;
 		} else {
 			return "";
 		}
@@ -55,9 +55,9 @@ public class CubeViewerPosition {
 		if (element == null){
 			hierarchy.readDefaultElementFromServer();
 			element = hierarchy.getDefaultElement();
-			return element.displayName;
+			return element.name;
 		}
-		return element.displayName;
+		return element.name;
 	}
 
 }

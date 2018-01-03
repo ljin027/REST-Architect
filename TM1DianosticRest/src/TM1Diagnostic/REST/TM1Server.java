@@ -181,10 +181,10 @@ public class TM1Server {
 		sslsf = new SSLConnectionSocketFactory(sslContext, new String[] { "TLSv1.2" }, null, new NoopHostnameVerifier());
 		Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create().register("http", new PlainConnectionSocketFactory()).register("https", sslsf).build();
 		connectionManager = new PoolingHttpClientConnectionManager(registry);
-		connectionManager.setMaxTotal(200);
-		connectionManager.setDefaultMaxPerRoute(20);
+		connectionManager.setMaxTotal(1000);
+		connectionManager.setDefaultMaxPerRoute(200);
 		HttpHost httphost = new HttpHost(adminhost, 80);
-		connectionManager.setMaxPerRoute(new HttpRoute(httphost), 50);
+		connectionManager.setMaxPerRoute(new HttpRoute(httphost), 200);
 
 		folders = new ArrayList<TM1Folder>();
 		cubes = new ArrayList<TM1Cube>();
@@ -311,7 +311,7 @@ public class TM1Server {
 			throw new TM1RestException(responseStatus, "");
 		}
 	}
-
+	
 	// HTTP GET
 	public void get(String request, String query) throws TM1RestException, URISyntaxException, ClientProtocolException, IOException {
 		errorCode = null;
@@ -786,7 +786,7 @@ public class TM1Server {
 			boolean cubeAdded = false;
 			if (!cubes.contains(cube)) {
 				for (int j = 0; j < cubes.size(); j++) {
-					if (cube.displayName.compareToIgnoreCase(cubes.get(j).displayName) < 0) {
+					if (cube.name.compareToIgnoreCase(cubes.get(j).name) < 0) {
 						cubes.add(j, cube);
 						cubeAdded = true;
 						break;
@@ -799,7 +799,7 @@ public class TM1Server {
 		}
 		for (int i = cubes.size() - 1; i >= 0; i--) {
 			TM1Cube cube = cubes.get(i);
-			if (!jcubes.toString().contains("\"Name\":\"" + cube.displayName + "\"")) {
+			if (!jcubes.toString().contains("\"Name\":\"" + cube.name + "\"")) {
 				cubes.remove(i);
 			}
 		}
@@ -846,17 +846,17 @@ public class TM1Server {
 					readFolderChildren(jchild.getJSONArray("Contents"), childfolder);
 				}
 			} else if (jchild.getString("@odata.type").equals("#ibm.tm1.api.v1.DocumentReference")) {
-				TM1ObjectReference reference = new TM1ObjectReference(childname, this, childid, DOCUMENT);
-				parent.addReference(reference);
+				//TM1ObjectReference reference = new TM1ObjectReference(childname, this, childid, DOCUMENT);
+				//parent.addReference(reference);
 			} else if (jchild.getString("@odata.type").equals("#ibm.tm1.api.v1.ViewReference")) {
-				TM1ObjectReference reference = new TM1ObjectReference(childname, this, childid, VIEW);
-				parent.addReference(reference);
+				//TM1ObjectReference reference = new TM1ObjectReference(childname, this, childid, VIEW);
+				//parent.addReference(reference);
 			} else if (jchild.getString("@odata.type").equals("#ibm.tm1.api.v1.CubeReference")) {
-				TM1ObjectReference reference = new TM1ObjectReference(childname, this, childid, CUBE);
-				parent.addReference(reference);
+				//TM1ObjectReference reference = new TM1ObjectReference(childname, this, childid, CUBE);
+				//parent.addReference(reference);
 			} else if (jchild.getString("@odata.type").equals("#ibm.tm1.api.v1.ProcessReference")) {
-				TM1ObjectReference reference = new TM1ObjectReference(childname, this, childid, PROCESS);
-				parent.addReference(reference);
+				//TM1ObjectReference reference = new TM1ObjectReference(childname, this, childid, PROCESS);
+				//parent.addReference(reference);
 			}
 		}
 	}
@@ -881,7 +881,7 @@ public class TM1Server {
 			boolean added = false;
 			if (!blobs.contains(blob)) {
 				for (int j = 0; j < blobs.size(); j++) {
-					if (blob.displayName.compareToIgnoreCase(blobs.get(j).displayName) < 0) {
+					if (blob.name.compareToIgnoreCase(blobs.get(j).name) < 0) {
 						blobs.add(j, blob);
 						added = true;
 						break;
@@ -894,7 +894,7 @@ public class TM1Server {
 		}
 		for (int i = blobs.size() - 1; i >= 0; i--) {
 			TM1Blob blob = blobs.get(i);
-			if (!blobJSONArray.toString().contains("\"Name\":\"" + blob.displayName + "\"")) {
+			if (!blobJSONArray.toString().contains("\"Name\":\"" + blob.name + "\"")) {
 				blobs.remove(i);
 			}
 		}
@@ -921,7 +921,7 @@ public class TM1Server {
 				boolean added = false;
 				if (!dimensions.contains(dimension)) {
 					for (int j = 0; j < dimensions.size(); j++) {
-						if (dimension.displayName.compareToIgnoreCase(dimensions.get(j).displayName) < 0) {
+						if (dimension.name.compareToIgnoreCase(dimensions.get(j).name) < 0) {
 							dimensions.add(j, dimension);
 							added = true;
 							break;
@@ -935,7 +935,7 @@ public class TM1Server {
 		}
 		for (int i = dimensions.size() - 1; i >= 0; i--) {
 			TM1Dimension dimension = dimensions.get(i);
-			if (!jdimensions.toString().contains("\"Name\":\"" + dimension.displayName + "\"")) {
+			if (!jdimensions.toString().contains("\"Name\":\"" + dimension.name + "\"")) {
 				dimensions.remove(i);
 			}
 		}
@@ -961,7 +961,7 @@ public class TM1Server {
 			boolean added = false;
 			if (!processes.contains(process)) {
 				for (int j = 0; j < processes.size(); j++) {
-					if (process.displayName.compareToIgnoreCase(processes.get(j).displayName) < 0) {
+					if (process.name.compareToIgnoreCase(processes.get(j).name) < 0) {
 						processes.add(j, process);
 						added = true;
 						break;
@@ -974,7 +974,7 @@ public class TM1Server {
 		}
 		for (int i = processes.size() - 1; i >= 0; i--) {
 			TM1Process process = processes.get(i);
-			if (!processJSONArray.toString().contains("\"Name\":\"" + process.displayName + "\"")) {
+			if (!processJSONArray.toString().contains("\"Name\":\"" + process.name + "\"")) {
 				processes.remove(i);
 			}
 		}
@@ -1002,7 +1002,7 @@ public class TM1Server {
 			boolean added = false;
 			if (!chores.contains(chore)) {
 				for (int j = 0; j < chores.size(); j++) {
-					if (chore.displayName.compareToIgnoreCase(chores.get(j).displayName) < 0) {
+					if (chore.name.compareToIgnoreCase(chores.get(j).name) < 0) {
 						chores.add(j, chore);
 						added = true;
 						break;
@@ -1016,7 +1016,7 @@ public class TM1Server {
 		}
 		for (int i = chores.size() - 1; i >= 0; i--) {
 			TM1Chore chore = chores.get(i);
-			if (!choreJSONArray.toString().contains("\"Name\":\"" + chore.displayName + "\"")) {
+			if (!choreJSONArray.toString().contains("\"Name\":\"" + chore.name + "\"")) {
 				chores.remove(i);
 			}
 		}
@@ -1148,17 +1148,14 @@ public class TM1Server {
 		return true;
 	}
 
-	public void exportallprocesses(String directory) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException {
-		for (int i = 0; i < processes.size(); i++) {
-			processes.get(i).writeToFile(directory);
-		}
-	}
 
+	/*
 	public boolean checkServerForObject(TM1Object tm1object) throws TM1RestException, ClientProtocolException, URISyntaxException, IOException {
 		String request = tm1object.entity;
 		get(request);
 		return true;
 	}
+	*/
 
 	/*
 	 * import_object_from_file
@@ -1169,6 +1166,7 @@ public class TM1Server {
 	 * rename the object prior to import into this model
 	 */
 
+	/*
 	public void importObjectFromFile(TM1Object tm1object, String newname) throws ClientProtocolException, TM1RestException, URISyntaxException, IOException, JSONException {
 		String entityset = "";
 		OrderedJSONObject payload = new OrderedJSONObject();
@@ -1214,6 +1212,7 @@ public class TM1Server {
 		OrderedJSONObject payload = cube.getJsonForTransfer(name);
 		post(req, payload);
 	}
+	*/
 
 	public String getSessionID() {
 		return TM1SessionId;
@@ -1234,22 +1233,24 @@ public class TM1Server {
 	 * dimension, processes, etc from the server. Performs search only on objects
 	 * known by the client.
 	 */
+	
+	/*
 	public List<SearchResult> search(String searchTerm, boolean includeControlObjects, boolean regex) throws TM1RestException, ClientProtocolException, JSONException, URISyntaxException, IOException {
 		List<SearchResult> results = new ArrayList<SearchResult>();
 		for (int i = 0; i < cubes.size(); i++) {
 			TM1Cube cube = cubes.get(i);
-			if (!includeControlObjects && cube.displayName.startsWith("}"))
+			if (!includeControlObjects && cube.name.startsWith("}"))
 				continue;
-			if (cube.displayName.contains(searchTerm)) {
+			if (cube.name.contains(searchTerm)) {
 				results.add(new SearchResult(cube, ""));
 			}
 			if (cube.readCubeViewsFromServer()) {
 				for (int j = 0; j < cube.viewCount(); j++) {
 					TM1View view = cube.getview(j);
-					if (!includeControlObjects && view.displayName.startsWith("}"))
+					if (!includeControlObjects && view.name.startsWith("}"))
 						continue;
 					if (view.displayName.contains(searchTerm)) {
-						results.add(new SearchResult(view, "Cube " + cube.displayName));
+						results.add(new SearchResult(view, "Cube " + cube.name));
 					}
 				}
 			}
@@ -1257,26 +1258,26 @@ public class TM1Server {
 
 		for (int i = 0; i < dimensions.size(); i++) {
 			TM1Dimension dimension = dimensions.get(i);
-			if (!includeControlObjects && dimension.displayName.startsWith("}"))
+			if (!includeControlObjects && dimension.name.startsWith("}"))
 				continue;
-			if (dimension.displayName.contains(searchTerm)) {
+			if (dimension.name.contains(searchTerm)) {
 				results.add(new SearchResult(dimension, ""));
 			}
 			dimension.readHierarchiesFromServer();
 			for (int j = 0; j < dimension.hierarchyCount(); j++) {
 				TM1Hierarchy hierarchy = dimension.getHeirarchy(j);
-				if (!includeControlObjects && hierarchy.displayName.startsWith("}"))
+				if (!includeControlObjects && hierarchy.name.startsWith("}"))
 					continue;
-				if (hierarchy.displayName.contains(searchTerm)) {
-					results.add(new SearchResult(hierarchy, " Hierarchy " + hierarchy.displayName));
+				if (hierarchy.name.contains(searchTerm)) {
+					results.add(new SearchResult(hierarchy, " Hierarchy " + hierarchy.name));
 				}
 				hierarchy.readSubsetsFromServer();
 				for (int k = 0; k < hierarchy.subsetCount(); k++) {
 					TM1Subset subset = hierarchy.getSubset(k);
-					if (!includeControlObjects && subset.displayName.startsWith("}"))
+					if (!includeControlObjects && subset.name.startsWith("}"))
 						continue;
-					if (subset.displayName.contains(searchTerm)) {
-						results.add(new SearchResult(subset, "Dimension " + dimension.displayName + " Hierarchy " + hierarchy.displayName));
+					if (subset.name.contains(searchTerm)) {
+						results.add(new SearchResult(subset, "Dimension " + dimension.name + " Hierarchy " + hierarchy.name));
 					}
 				}
 
@@ -1303,6 +1304,7 @@ public class TM1Server {
 
 		return results;
 	}
+	*/
 
 	/*
 	 * Function: keepAlive

@@ -15,7 +15,15 @@ import org.apache.wink.json4j.JSONArray;
 import TM1Diagnostic.CubeViewerPosition;
 import TM1Diagnostic.TM1ViewMember;
 
-public class TM1View extends TM1Object {
+public class TM1View  {
+	
+	public TM1Server tm1server;
+	public TM1Dimension dimension;
+	public TM1Hierarchy hierarchy;
+	public String name;
+	public String entity;
+	public String entitySet;
+	public OrderedJSONObject transferJSON;
 
 	static public int ROW = 0;
 	static public int COLUMN = 1;
@@ -43,9 +51,9 @@ public class TM1View extends TM1Object {
 	public int security;
 
 	public TM1View(String name, TM1Cube parent, TM1Server tm1server) {
-		super(name, TM1Object.VIEW, parent, tm1server);
-
-		cube  = parent;
+		this.name = name;
+		this.tm1server = tm1server;
+		this.cube  = parent;
 
 		cells = new ArrayList<TM1Cell>();
 		axes = new ArrayList<TM1ViewAxes>();
@@ -56,15 +64,16 @@ public class TM1View extends TM1Object {
 		sandboxes = new ArrayList<TM1Sandbox>();
 
 		this.security = PRIVATE;
-		entity = "PrivateViews('" + displayName + "')";
+		entity = "PrivateViews('" + name + "')";
 	}
 
 	public TM1View(String name, TM1Cube parent, TM1Server tm1server, int security) {
-		super(name, TM1Object.VIEW, parent, tm1server);
+		this.name = name;
+		this.tm1server = tm1server;
+		this.cube  = parent;
+		
 		cells = new ArrayList<TM1Cell>();
 		axes = new ArrayList<TM1ViewAxes>();
-
-		cube  = parent;
 
 		columns = new ArrayList<CubeViewerPosition>();
 		rows = new ArrayList<CubeViewerPosition>();
@@ -74,35 +83,15 @@ public class TM1View extends TM1Object {
 
 		this.security = security;
 		if (security == PRIVATE) {
-			entity = "PrivateViews('" + displayName + "')";
+			entity = "PrivateViews('" + name + "')";
 		} else if (security == PUBLIC) {
-			entity = "Views('" + displayName + "')";
+			entity = "Views('" + name + "')";
 		}
 	}
-
-	/*
-	 * public void readDimensionsPositionFromServer() { TM1Cube cube = (TM1Cube)
-	 * parent; cube.readCubeDimensionsFromServer(); for (int i =
-	 * cube.dimensionCount() - 1; i >= 0; i--) { TM1Dimension dimension =
-	 * cube.getDimension(i); System.out.println("Found dim " +
-	 * dimension.displayName); TM1Hierarchy hierarchy =
-	 * dimension.getDefaultHierarchy(); hierarchy.readHierarchyFromServer(); if
-	 * (i == ROW) { TM1Subset subsetAll; if
-	 * (hierarchy.readSubsetAllFromServer()){ subsetAll =
-	 * hierarchy.getSubsetAll(); CubeViewerPosition position = new
-	 * CubeViewerPosition(ROW, dimension, hierarchy, subsetAll, null);
-	 * dimensionPositions.add(position);
-	 * 
-	 * } } else if (i == COLUMN) { TM1Subset subsetAll; if
-	 * (hierarchy.readSubsetAllFromServer()){ subsetAll =
-	 * hierarchy.getSubsetAll(); CubeViewerPosition position = new
-	 * CubeViewerPosition(COLUMN, dimension, hierarchy, subsetAll, null);
-	 * dimensionPositionRs.add(position);
-	 * 
-	 * } } else { TM1Element element = hierarchy.getFirstTopElement();
-	 * CubeViewerPosition position = new CubeViewerPosition(FILTER, dimension,
-	 * hierarchy, null, element); dimensionPositions.add(position); } } }
-	 */
+	
+	public TM1Cube getCube() {
+		return cube;
+	}
 
 	public void clearRows(){
 		rows.clear();
@@ -387,7 +376,7 @@ public class TM1View extends TM1Object {
 			boolean annotated = jcell.getBoolean("Annotated");
 			boolean consolidated = jcell.getBoolean("Consolidated");
 
-			TM1Cell cell = new TM1Cell(i, type, status, value, formattedvalue, formatstring, updateable, rulederived, annotated, consolidated);
+			TM1Cell cell = new TM1Cell(i, 0, status, value, formattedvalue, formatstring, updateable, rulederived, annotated, consolidated);
 			cells.add(cell);
 		}
 
@@ -406,7 +395,7 @@ public class TM1View extends TM1Object {
 			TM1Dimension dimension = rowPosition.dimension;
 			TM1Hierarchy hierarchy = rowPosition.hierarchy;
 			TM1Subset subset = rowPosition.subset;
-			if (subset.displayName.isEmpty()){
+			if (subset.name.isEmpty()){
 				subset.readElementListFromServer();
 			}
 			OrderedJSONObject dimensionJSON = new OrderedJSONObject();
@@ -426,7 +415,7 @@ public class TM1View extends TM1Object {
 			TM1Dimension dimension = columnPosition.dimension;
 			TM1Hierarchy hierarchy = columnPosition.hierarchy;
 			TM1Subset subset = columnPosition.subset;
-			if (subset.displayName.isEmpty()){
+			if (subset.name.isEmpty()){
 				subset.readElementListFromServer();
 			}
 			OrderedJSONObject dimensionJSON = new OrderedJSONObject();
@@ -486,7 +475,7 @@ public class TM1View extends TM1Object {
 		OrderedJSONObject updatedViewJSON = new OrderedJSONObject();
 		updatedViewJSON.put("@odata.type", "#ibm.tm1.api.v1.NativeView");
 		if (security == PRIVATE){
-			updatedViewJSON.put("@odata.context", "../$metadata#Cubes('" + parent.displayName + "')/PrivateViews/ibm.tm1.api.v1.NativeView/$entity");
+			updatedViewJSON.put("@odata.context", "../$metadata#Cubes('" + cube.name + "')/PrivateViews/ibm.tm1.api.v1.NativeView/$entity");
 		}
 
 		JSONArray rowDimensionsJSON = new JSONArray();
@@ -496,7 +485,7 @@ public class TM1View extends TM1Object {
 			CubeViewerPosition rowPosition = rows.get(i);
 			TM1Hierarchy hierarchy = rowPosition.hierarchy;
 			TM1Subset subset = rowPosition.subset;
-			if (subset.displayName.isEmpty()){
+			if (subset.name.isEmpty()){
 				subset.readElementListFromServer();
 			}
 			OrderedJSONObject dimensionJSON = new OrderedJSONObject();
@@ -515,7 +504,7 @@ public class TM1View extends TM1Object {
 			CubeViewerPosition columnPosition = columns.get(i);
 			TM1Hierarchy hierarchy = columnPosition.hierarchy;
 			TM1Subset subset = columnPosition.subset;
-			if (subset.displayName.isEmpty()){
+			if (subset.name.isEmpty()){
 				subset.readElementListFromServer();
 			}
 			OrderedJSONObject dimensionJSON = new OrderedJSONObject();
@@ -567,7 +556,7 @@ public class TM1View extends TM1Object {
 		String request = entity;
 		String query = "$expand=tm1.NativeView/Rows/Subset($select=Name;$expand=Hierarchy($expand=Dimension)),tm1.NativeView/Columns/Subset($select=Name;$expand=Hierarchy($expand=Dimension)),tm1.NativeView/Titles/Subset($select=Name;$expand=Hierarchy($expand=Dimension)),tm1.NativeView/Titles/Selected($select=Name;$expand=Hierarchy($expand=Dimension))";
 		tm1server.get(request, query);
-		FileWriter fw = new FileWriter(directory + "//" + displayName, false);
+		FileWriter fw = new FileWriter(directory + "//" + name, false);
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(tm1server.response.toString());
 		bw.close();

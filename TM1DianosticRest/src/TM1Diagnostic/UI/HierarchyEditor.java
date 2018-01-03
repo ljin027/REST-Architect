@@ -92,7 +92,7 @@ public class HierarchyEditor {
 		this.dimension = hierarchy.dimension;
 		shell = new Shell(parent, SWT.RESIZE | SWT.MAX | SWT.MIN);
 		shell.setSize(883, 506);
-		shell.setText("Hierarchy Editor - " + dimension.displayName + "/" + hierarchy.displayName);
+		shell.setText("Hierarchy Editor - " + dimension.name + "/" + hierarchy.name);
 		shell.setLayout(new GridLayout(1, false));
 		display = shell.getDisplay();
 		createContents();
@@ -156,11 +156,11 @@ public class HierarchyEditor {
 		Combo combo = new Combo(buttons_pane, SWT.NONE);
 		combo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		if (hierarchy != null) {
-			TM1Dimension dimension = (TM1Dimension) hierarchy.getParent();
+			TM1Dimension dimension = (TM1Dimension) hierarchy.dimension;
 			for (int i = 0; i < dimension.hierarchyCount(); i++) {
-				combo.add(dimension.getHeirarchy(i).displayName);
+				combo.add(dimension.getHeirarchy(i).name);
 			}
-			combo.setText(hierarchy.displayName);
+			combo.setText(hierarchy.name);
 		}
 
 		Button expand_button = new Button(buttons_pane, SWT.NONE);
@@ -782,7 +782,7 @@ public class HierarchyEditor {
 			int elemWeight = Integer.parseInt(rootItem.getText(3));
 			int elemLevel = Integer.parseInt(rootItem.getText(4));
 
-			TM1Element rootElement = new TM1Element(elemName, hierarchy.getServer(), hierarchy, elemType, elemIndex, elemWeight, elemLevel);
+			TM1Element rootElement = new TM1Element(elemName, hierarchy.tm1server, hierarchy, elemType, elemIndex, elemWeight, elemLevel);
 			if (rootItem.getItemCount() > 0) {
 				updateHierarchyFromUI(rootItem, rootElement);
 			}
@@ -799,7 +799,7 @@ public class HierarchyEditor {
 			int elemWeight = Integer.parseInt(childItem.getText(3));
 			int elemLevel = Integer.parseInt(childItem.getText(4));
 
-			TM1Element childElement = new TM1Element(elemName, hierarchy.getServer(), hierarchy, elemType, elemIndex, elemWeight, elemLevel);
+			TM1Element childElement = new TM1Element(elemName, hierarchy.tm1server, hierarchy, elemType, elemIndex, elemWeight, elemLevel);
 			if (childItem.getItemCount() > 0) {
 				updateHierarchyFromUI(childItem, childElement);
 			}

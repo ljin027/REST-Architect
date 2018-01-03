@@ -132,7 +132,7 @@ public class SubsetEditor {
 		shell = new Shell(parent, SWT.RESIZE | SWT.MAX | SWT.MIN);
 		shell.setSize(689, 448);
 		//System.out.println("Update Subset Mode");
-		shell.setText("Subset Editor - " + hierarchy.getParent().displayName + "/" + hierarchy.displayName + "/" + subset.displayName);
+		shell.setText("Subset Editor - " + hierarchy.getDimension().name + "/" + hierarchy.name + "/" + subset.name);
 		createContents();
 		shell.layout();
 	}
@@ -310,15 +310,15 @@ public class SubsetEditor {
 			e1.printStackTrace();
 		}
 
-		if (subset.displayName.equals("")) {
+		if (subset.name.equals("")) {
 			subsetSelectCombo.add("<no subset>");
 			subsetSelectCombo.setData("<no subset>", subset);
 			subsetSelectCombo.select(0);
 		}
 		for (int i = 0; i < hierarchy.subsetCount(); i++) {
-			subsetSelectCombo.add(hierarchy.getSubset(i).displayName);
-			subsetSelectCombo.setData(hierarchy.getSubset(i).displayName, hierarchy.getSubset(i));
-			if (subset.displayName.equals(hierarchy.getSubset(i).displayName)) {
+			subsetSelectCombo.add(hierarchy.getSubset(i).name);
+			subsetSelectCombo.setData(hierarchy.getSubset(i).name, hierarchy.getSubset(i));
+			if (subset.name.equals(hierarchy.getSubset(i).name)) {
 				subsetSelectCombo.select(i);
 			}
 		}
@@ -470,7 +470,7 @@ public class SubsetEditor {
 							if (aliasEnabled){
 								newItem.setText(0, element.alias);
 							} else {
-								newItem.setText(0, element.displayName);
+								newItem.setText(0, element.name);
 							}
 							newItem.setText(1, Integer.toString(element.index));
 							newItem.setText(2, Integer.toString(element.level));
@@ -482,7 +482,7 @@ public class SubsetEditor {
 							} else if (element.elementType.equals(STRING)) {
 								newItem.setImage(ICON_STRING);
 							}
-							System.out.println(element.displayName + " insert before " + dropElement.displayName);
+							System.out.println(element.name + " insert before " + dropElement.name);
 							try {
 								subset.insertBeforeElement(element, dropElement);
 							} catch (TM1RestException | URISyntaxException | IOException | JSONException e) {
@@ -501,7 +501,7 @@ public class SubsetEditor {
 							if (aliasEnabled){
 								newItem.setText(0, element.alias);
 							} else {
-								newItem.setText(0, element.displayName);
+								newItem.setText(0, element.name);
 							}
 							newItem.setText(1, Integer.toString(element.index));
 							newItem.setText(2, Integer.toString(element.level));
@@ -514,7 +514,7 @@ public class SubsetEditor {
 								newItem.setImage(ICON_STRING);
 							}
 
-							System.out.println(element.displayName + " insert after " + dropElement.displayName);
+							System.out.println(element.name + " insert after " + dropElement.name);
 							try {
 								subset.insertAfterElement(element, dropElement);
 							} catch (JSONException | TM1RestException | URISyntaxException | IOException e) {
@@ -531,7 +531,7 @@ public class SubsetEditor {
 							if (aliasEnabled){
 								newItem.setText(0, element.alias);
 							} else {
-								newItem.setText(0, element.displayName);
+								newItem.setText(0, element.name);
 							}
 							newItem.setText(1, Integer.toString(element.index));
 							newItem.setText(2, Integer.toString(element.level));
@@ -544,7 +544,7 @@ public class SubsetEditor {
 								newItem.setImage(ICON_STRING);
 							}
 
-							System.out.println(element.displayName + " insert after " + dropElement.displayName);
+							System.out.println(element.name + " insert after " + dropElement.name);
 							try {
 								subset.insertAfterElement(element, dropElement);
 							} catch (JSONException | TM1RestException | URISyntaxException | IOException e) {
@@ -563,7 +563,7 @@ public class SubsetEditor {
 						if (aliasEnabled){
 							newItem.setText(0, element.alias);
 						} else {
-							newItem.setText(0, element.displayName);
+							newItem.setText(0, element.name);
 						}
 						newItem.setText(1, Integer.toString(element.index));
 						newItem.setText(2, Integer.toString(element.level));
@@ -576,7 +576,7 @@ public class SubsetEditor {
 							newItem.setImage(ICON_STRING);
 						}
 
-						System.out.println(element.displayName + " inserted at end of subset");
+						System.out.println(element.name + " inserted at end of subset");
 						try {
 							subset.insertElement(element);
 						} catch (JSONException | TM1RestException | URISyntaxException | IOException e) {
@@ -816,7 +816,7 @@ public class SubsetEditor {
 
 
 		// subset.readElementListFromServer();
-		if (subset.displayName.equals("")){
+		if (subset.name.equals("")){
 			subsetTableSetAll();
 		} else {
 			refreshSubsetTable();
@@ -1011,7 +1011,7 @@ public class SubsetEditor {
 			if (aliasEnabled){
 				t.setText(element.alias);
 			} else {
-				t.setText(element.displayName);
+				t.setText(element.name);
 			}
 		}
 
@@ -1022,7 +1022,7 @@ public class SubsetEditor {
 			if (aliasEnabled){
 				t.setText(element.alias);
 			} else {
-				t.setText(element.displayName);
+				t.setText(element.name);
 			}
 			if (t.getItemCount() > 0) {
 				refreshElementAliasesChildren(t);
@@ -1039,7 +1039,7 @@ public class SubsetEditor {
 			if (aliasEnabled){
 				child.setText(element.alias);
 			} else {
-				child.setText(element.displayName);
+				child.setText(element.name);
 			}
 			if (child.getItemCount() > 0) {
 				refreshElementAliasesChildren(child);
